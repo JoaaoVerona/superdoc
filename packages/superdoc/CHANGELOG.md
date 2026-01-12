@@ -1,3 +1,10 @@
+# [1.5.0-next.7](https://github.com/superdoc-dev/superdoc/compare/v1.5.0-next.6...v1.5.0-next.7) (2026-01-12)
+
+
+### Bug Fixes
+
+* add missing DrawingML namespaces ([#1719](https://github.com/superdoc-dev/superdoc/issues/1719)) ([9bfd977](https://github.com/superdoc-dev/superdoc/commit/9bfd977837fa2c6137eed3149794292580ddb2ac))
+
 # [1.5.0-next.6](https://github.com-Harbour-Enterprises/superdoc-dev/superdoc/compare/v1.5.0-next.5...v1.5.0-next.6) (2026-01-12)
 
 
