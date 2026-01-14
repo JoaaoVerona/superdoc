@@ -1,3 +1,15 @@
+# [1.7.0-next.1](https://github.com/superdoc-dev/superdoc/compare/v1.6.2-next.2...v1.7.0-next.1) (2026-01-14)
+
+
+### Bug Fixes
+
+* vector text box with content rendering ([#1741](https://github.com/superdoc-dev/superdoc/issues/1741)) ([b14e88e](https://github.com/superdoc-dev/superdoc/commit/b14e88e873455f93eac2005443f1782df9d29ce0))
+
+
+### Features
+
+* annotation rendering ([#1738](https://github.com/superdoc-dev/superdoc/issues/1738)) ([317b1c4](https://github.com/superdoc-dev/superdoc/commit/317b1c4239f6eb1e52446f1745915e9da138b5a1))
+
 ## [1.6.2-next.2](https://github.com/superdoc-dev/superdoc/compare/v1.6.2-next.1...v1.6.2-next.2) (2026-01-14)
 
 
