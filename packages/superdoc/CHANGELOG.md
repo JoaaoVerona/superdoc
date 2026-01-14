@@ -1,3 +1,11 @@
+## [1.6.2-next.1](https://github.com/superdoc-dev/superdoc/compare/v1.6.1...v1.6.2-next.1) (2026-01-14)
+
+
+### Bug Fixes
+
+* add dispatch method type and mark view as optional for headless mode ([#1728](https://github.com/superdoc-dev/superdoc/issues/1728)) ([45195d7](https://github.com/superdoc-dev/superdoc/commit/45195d78b4eb5b7b879ce4837393ce83f03ba595))
+* add type declaration for Editor.loadXmlData and Editor.open ([#1727](https://github.com/superdoc-dev/superdoc/issues/1727)) ([ae452a9](https://github.com/superdoc-dev/superdoc/commit/ae452a98409e6c34c9d08b1ba12e2c21e0f9f0ab))
+
 ## [1.6.1](https://github.com/superdoc-dev/superdoc/compare/v1.6.0...v1.6.1) (2026-01-14)
 
 
