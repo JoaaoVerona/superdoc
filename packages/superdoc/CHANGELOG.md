@@ -1,3 +1,10 @@
+# [1.6.0-next.3](https://github.com/superdoc-dev/superdoc/compare/v1.6.0-next.2...v1.6.0-next.3) (2026-01-14)
+
+
+### Features
+
+* **comments:** add public addComment command with simplified API ([#1731](https://github.com/superdoc-dev/superdoc/issues/1731)) ([850ee46](https://github.com/superdoc-dev/superdoc/commit/850ee469bc2cf39e807ecb0ba96ea9043f668288))
+
 # [1.6.0-next.2](https://github.com/superdoc-dev/superdoc/compare/v1.6.0-next.1...v1.6.0-next.2) (2026-01-14)
 
 
