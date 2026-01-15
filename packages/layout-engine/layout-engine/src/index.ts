@@ -40,6 +40,7 @@ import { collectAnchoredDrawings, collectAnchoredTables, collectPreRegisteredAnc
 import { createPaginator, type PageState, type ConstraintBoundary } from './paginator.js';
 import { formatPageNumber } from './pageNumbering.js';
 import { shouldSuppressSpacingForEmpty } from './layout-utils.js';
+import { balancePageColumns } from './column-balancing.js';
 
 type PageSize = { w: number; h: number };
 type Margins = {
@@ -532,8 +533,14 @@ export function layoutDocument(blocks: FlowBlock[], measures: Measure[], options
         next.activeRightMargin = rightMargin;
         next.pendingRightMargin = rightMargin;
       }
+      // Update columns - if section has columns, use them; if undefined, reset to single column.
+      // In OOXML, absence of <w:cols> means single column (default).
       if (block.columns) {
         next.activeColumns = { count: block.columns.count, gap: block.columns.gap };
+        next.pendingColumns = null;
+      } else {
+        // No columns specified = reset to single column (OOXML default)
+        next.activeColumns = { count: 1, gap: 0 };
         next.pendingColumns = null;
       }
       // Schedule section refs for first section (will be applied on first page creation)
@@ -607,9 +614,12 @@ export function layoutDocument(blocks: FlowBlock[], measures: Measure[], options
     if (block.pageSize) next.pendingPageSize = { w: block.pageSize.w, h: block.pageSize.h };
     if (block.orientation) next.pendingOrientation = block.orientation;
     const sectionType = block.type ?? 'continuous';
+    // Check if columns are changing: either explicitly to a different config,
+    // or implicitly resetting to single column (undefined = single column in OOXML)
     const isColumnsChanging =
-      !!block.columns &&
-      (block.columns.count !== next.activeColumns.count || block.columns.gap !== next.activeColumns.gap);
+      (block.columns &&
+        (block.columns.count !== next.activeColumns.count || block.columns.gap !== next.activeColumns.gap)) ||
+      (!block.columns && next.activeColumns.count > 1);
     // Schedule section index change for next page (enables section-aware page numbering)
     const sectionIndexRaw = block.attrs?.sectionIndex;
     const metadataIndex = typeof sectionIndexRaw === 'number' ? sectionIndexRaw : Number(sectionIndexRaw ?? NaN);
@@ -634,26 +644,32 @@ export function layoutDocument(blocks: FlowBlock[], measures: Measure[], options
       pendingSectionRefs = mergeSectionRefs(baseSectionRefs, nextSectionRefs);
       layoutLog(`[Layout] Compat fallback: Scheduled pendingSectionRefs:`, pendingSectionRefs);
     }
+    // Helper to get column config: use block.columns if defined, otherwise reset to single column (OOXML default)
+    const getColumnConfig = () =>
+      block.columns ? { count: block.columns.count, gap: block.columns.gap } : { count: 1, gap: 0 };
+
     if (block.attrs?.requirePageBoundary) {
-      if (block.columns) next.pendingColumns = { count: block.columns.count, gap: block.columns.gap };
+      next.pendingColumns = getColumnConfig();
       return { decision: { forcePageBreak: true, forceMidPageRegion: false }, state: next };
     }
     if (sectionType === 'nextPage') {
-      if (block.columns) next.pendingColumns = { count: block.columns.count, gap: block.columns.gap };
+      next.pendingColumns = getColumnConfig();
       return { decision: { forcePageBreak: true, forceMidPageRegion: false }, state: next };
     }
     if (sectionType === 'evenPage') {
-      if (block.columns) next.pendingColumns = { count: block.columns.count, gap: block.columns.gap };
+      next.pendingColumns = getColumnConfig();
       return { decision: { forcePageBreak: true, forceMidPageRegion: false, requiredParity: 'even' }, state: next };
     }
     if (sectionType === 'oddPage') {
-      if (block.columns) next.pendingColumns = { count: block.columns.count, gap: block.columns.gap };
+      next.pendingColumns = getColumnConfig();
       return { decision: { forcePageBreak: true, forceMidPageRegion: false, requiredParity: 'odd' }, state: next };
     }
     if (isColumnsChanging) {
+      next.pendingColumns = getColumnConfig();
       return { decision: { forcePageBreak: false, forceMidPageRegion: true }, state: next };
     }
-    if (block.columns) next.pendingColumns = { count: block.columns.count, gap: block.columns.gap };
+    // For continuous section breaks, schedule column change for next page boundary
+    next.pendingColumns = getColumnConfig();
     return { decision: { forcePageBreak: false, forceMidPageRegion: false }, state: next };
   };
 
@@ -1311,32 +1327,21 @@ export function layoutDocument(blocks: FlowBlock[], measures: Measure[], options
         }
       }
 
-      // Handle mid-page region changes
-      if (breakInfo.forceMidPageRegion && block.columns) {
+      // Handle mid-page region changes (column layout changes within a page)
+      // Uses pendingColumns from scheduleSectionBreak which handles both:
+      // - Explicit column changes (block.columns defined with different config)
+      // - Implicit reset to single column (block.columns undefined per OOXML spec)
+      if (breakInfo.forceMidPageRegion && updatedState.pendingColumns) {
         let state = paginator.ensurePage();
         const columnIndexBefore = state.columnIndex;
+        const newColumns = updatedState.pendingColumns;
 
-        // Validate and normalize column count to ensure it's a positive integer
-        const rawCount = block.columns.count;
-        const validatedCount =
-          typeof rawCount === 'number' && Number.isFinite(rawCount) && rawCount > 0
-            ? Math.max(1, Math.floor(rawCount))
-            : 1;
-
-        // Validate and normalize gap to ensure it's non-negative
-        const rawGap = block.columns.gap;
-        const validatedGap =
-          typeof rawGap === 'number' && Number.isFinite(rawGap) && rawGap >= 0 ? Math.max(0, rawGap) : 0;
-
-        const newColumns = { count: validatedCount, gap: validatedGap };
-
-        // If we reduce column count and are currently in a column that won't exist
-        // in the new layout, start a fresh page to avoid overwriting earlier columns.
+        // If reducing column count and currently in a column that won't exist
+        // in the new layout, start a fresh page to avoid overwriting earlier columns
         if (columnIndexBefore >= newColumns.count) {
           state = paginator.startNewPage();
         }
 
-        // Start a new mid-page region with the new column configuration
         startMidPageRegion(state, newColumns);
       }
 
@@ -1547,6 +1552,27 @@ export function layoutDocument(blocks: FlowBlock[], measures: Measure[], options
         }
       }
 
+      /**
+       * Contextual spacing suppression for spacingAfter.
+       * Per OOXML spec: when current paragraph has contextualSpacing=true and
+       * the next paragraph has the same styleId, suppress current's spacingAfter.
+       */
+      let overrideSpacingAfter: number | undefined;
+      const curStyleId = typeof paraBlock.attrs?.styleId === 'string' ? paraBlock.attrs.styleId : undefined;
+      const curContextualSpacing = asBoolean(paraBlock.attrs?.contextualSpacing);
+      if (curContextualSpacing && curStyleId) {
+        const nextBlock = index < blocks.length - 1 ? blocks[index + 1] : null;
+        if (nextBlock?.kind === 'paragraph') {
+          const nextStyleId =
+            typeof (nextBlock as ParagraphBlock).attrs?.styleId === 'string'
+              ? (nextBlock as ParagraphBlock).attrs?.styleId
+              : undefined;
+          if (nextStyleId === curStyleId) {
+            overrideSpacingAfter = 0;
+          }
+        }
+      }
+
       layoutParagraphBlock(
         {
           block,
@@ -1557,6 +1583,7 @@ export function layoutDocument(blocks: FlowBlock[], measures: Measure[], options
           columnX,
           floatManager,
           remeasureParagraph: options.remeasureParagraph,
+          overrideSpacingAfter,
         },
         anchorsForPara
           ? {
@@ -1800,6 +1827,93 @@ export function layoutDocument(blocks: FlowBlock[], measures: Measure[], options
     if (yOffset > 0) {
       for (const fragment of page.fragments) {
         fragment.y += yOffset;
+      }
+    }
+  }
+
+  // Apply column balancing to pages with multi-column layout.
+  // This redistributes fragments to achieve balanced column heights, matching Word's behavior.
+  if (activeColumns.count > 1) {
+    const contentWidth = pageSize.w - (activeLeftMargin + activeRightMargin);
+    const normalizedCols = normalizeColumns(activeColumns, contentWidth);
+
+    // Build measure map for fragment height calculation during balancing
+    const measureMap = new Map<string, { kind: string; lines?: Array<{ lineHeight: number }>; height?: number }>();
+    // Build blockId -> sectionIndex map to filter fragments by section
+    const blockSectionMap = new Map<string, number>();
+    blocks.forEach((block, idx) => {
+      const measure = measures[idx];
+      if (measure) {
+        measureMap.set(block.id, measure as { kind: string; lines?: Array<{ lineHeight: number }>; height?: number });
+      }
+      // Track section index for each block (for filtering during balancing)
+      // Not all block types have attrs, so access it safely
+      const blockWithAttrs = block as { attrs?: { sectionIndex?: number } };
+      const sectionIdx = blockWithAttrs.attrs?.sectionIndex;
+      if (typeof sectionIdx === 'number') {
+        blockSectionMap.set(block.id, sectionIdx);
+      }
+    });
+
+    for (const page of pages) {
+      // Balance the last page (section ends at document end).
+      // TODO: Track section boundaries and balance at each continuous section break.
+      if (page === pages[pages.length - 1] && page.fragments.length > 0) {
+        // Skip balancing if fragments are already in multiple columns (e.g., explicit column breaks).
+        // Balancing should only apply when all content flows naturally in column 0.
+        const uniqueXPositions = new Set(page.fragments.map((f) => Math.round(f.x)));
+        const hasExplicitColumnStructure = uniqueXPositions.size > 1;
+
+        if (hasExplicitColumnStructure) {
+          continue;
+        }
+
+        // Skip balancing if fragments have different widths (indicating different column configs
+        // from multiple sections). Balancing would incorrectly apply the final section's width to all.
+        const uniqueWidths = new Set(page.fragments.map((f) => Math.round(f.width)));
+        const hasMixedColumnWidths = uniqueWidths.size > 1;
+
+        if (hasMixedColumnWidths) {
+          continue;
+        }
+
+        // Check if page has content from multiple sections.
+        // If so, only balance fragments from the final multi-column section.
+        const fragmentSections = new Set<number>();
+        for (const f of page.fragments) {
+          const section = blockSectionMap.get(f.blockId);
+          if (section !== undefined) {
+            fragmentSections.add(section);
+          }
+        }
+
+        // Only balance fragments from the final section when there are mixed sections
+        const hasMixedSections = fragmentSections.size > 1;
+        const fragmentsToBalance = hasMixedSections
+          ? page.fragments.filter((f) => {
+              const fragSection = blockSectionMap.get(f.blockId);
+              return fragSection === activeSectionIndex;
+            })
+          : page.fragments;
+
+        if (fragmentsToBalance.length > 0) {
+          balancePageColumns(
+            fragmentsToBalance as {
+              x: number;
+              y: number;
+              width: number;
+              kind: string;
+              blockId: string;
+              fromLine?: number;
+              toLine?: number;
+              height?: number;
+            }[],
+            normalizedCols,
+            { left: activeLeftMargin },
+            activeTopMargin,
+            measureMap,
+          );
+        }
       }
     }
   }
