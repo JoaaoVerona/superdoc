@@ -1,3 +1,12 @@
+# [1.7.0-next.7](https://github.com/superdoc-dev/superdoc/compare/v1.7.0-next.6...v1.7.0-next.7) (2026-01-15)
+
+
+### Bug Fixes
+
+* annotation issues ([#1752](https://github.com/superdoc-dev/superdoc/issues/1752)) ([9b13ce0](https://github.com/superdoc-dev/superdoc/commit/9b13ce0141f9f526bdaa6cfc5ea18616290b0688))
+* handle fldSimple syntax for page number fields ([#1755](https://github.com/superdoc-dev/superdoc/issues/1755)) ([8325783](https://github.com/superdoc-dev/superdoc/commit/83257837cc3123e6696a8fd231e96a4b31411c1b))
+* try different yaml format for label ([0484c89](https://github.com/superdoc-dev/superdoc/commit/0484c8982241a21ba39b3c202f01eae90a4d7ee3))
+
 # [1.7.0-next.6](https://github.com/superdoc-dev/superdoc/compare/v1.7.0-next.5...v1.7.0-next.6) (2026-01-15)
 
 
