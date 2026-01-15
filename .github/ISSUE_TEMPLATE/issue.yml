@@ -1,8 +1,7 @@
 name: Open an issue
 description: Report a bug, request a feature, or ask a question
-title: ""
-labels: ["stage: triage"]
-
+labels:
+  - "stage: triage"
 body:
   - type: textarea
     id: description
