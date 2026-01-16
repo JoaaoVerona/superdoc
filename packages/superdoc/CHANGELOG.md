@@ -1,3 +1,10 @@
+# [1.7.0-next.9](https://github.com/superdoc-dev/superdoc/compare/v1.7.0-next.8...v1.7.0-next.9) (2026-01-16)
+
+
+### Bug Fixes
+
+* **comments:** create dynamic comment export system based on document origin type ([#1733](https://github.com/superdoc-dev/superdoc/issues/1733)) ([b55fddf](https://github.com/superdoc-dev/superdoc/commit/b55fddf429549f462e1b61747c89e2ab85ad4d45)), closes [#1618](https://github.com/superdoc-dev/superdoc/issues/1618)
+
 # [1.7.0-next.8](https://github.com/superdoc-dev/superdoc/compare/v1.7.0-next.7...v1.7.0-next.8) (2026-01-15)
 
 
