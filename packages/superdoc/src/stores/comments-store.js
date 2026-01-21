@@ -93,6 +93,22 @@ export const useCommentsStore = defineStore('comments', () => {
     return getComment(comment.parentCommentId);
   };
 
+  const isRangeThreadedComment = (comment) => {
+    if (!comment) return false;
+    return (
+      comment.threadingStyleOverride === 'range-based' ||
+      comment.threadingMethod === 'range-based' ||
+      comment.originalXmlStructure?.hasCommentsExtended === false
+    );
+  };
+
+  const shouldThreadWithTrackedChange = (comment) => {
+    if (!comment?.trackedChangeParentId) return false;
+    if (!isRangeThreadedComment(comment)) return false;
+    const trackedChange = getComment(comment.trackedChangeParentId);
+    return Boolean(trackedChange?.trackedChange);
+  };
+
   /**
    * Extract the position lookup key from a comment or comment ID.
    * Prefers importedId for imported comments since editor marks retain the original ID.
@@ -187,7 +203,8 @@ export const useCommentsStore = defineStore('comments', () => {
     if (!isViewingMode.value) return true;
     const parent = getThreadParent(comment);
     if (!parent && comment?.parentCommentId) return false;
-    const isTrackedChange = Boolean(parent?.trackedChange);
+    // Check both parent's trackedChange flag and comment's trackedChangeParentId
+    const isTrackedChange = Boolean(parent?.trackedChange) || Boolean(comment?.trackedChangeParentId);
     return isTrackedChange ? viewingVisibility.trackChangesVisible : viewingVisibility.commentsVisible;
   };
 
@@ -389,22 +406,24 @@ export const useCommentsStore = defineStore('comments', () => {
 
     commentsList.value.forEach((comment) => {
       if (!isThreadVisible(comment)) return;
+      const trackedChangeParentId = shouldThreadWithTrackedChange(comment) ? comment.trackedChangeParentId : null;
+      const parentId = comment.parentCommentId || trackedChangeParentId;
       // Track resolved comments
       if (comment.resolvedTime) {
         resolvedComments.push(comment);
       }
 
       // Track parent comments
-      else if (!comment.parentCommentId && !comment.resolvedTime) {
+      else if (!parentId && !comment.resolvedTime) {
         parentComments.push({ ...comment });
       }
 
       // Track child comments (threaded comments)
-      else if (comment.parentCommentId) {
-        if (!childCommentMap.has(comment.parentCommentId)) {
-          childCommentMap.set(comment.parentCommentId, []);
+      else if (parentId) {
+        if (!childCommentMap.has(parentId)) {
+          childCommentMap.set(parentId, []);
         }
-        childCommentMap.get(comment.parentCommentId).push(comment);
+        childCommentMap.get(parentId).push(comment);
       }
     });
 
@@ -616,6 +635,7 @@ export const useCommentsStore = defineStore('comments', () => {
         commentId: comment.commentId,
         isInternal: false,
         parentCommentId: comment.parentCommentId,
+        trackedChangeParentId: comment.trackedChangeParentId,
         creatorName,
         createdTime: comment.createdTime,
         creatorEmail: comment.creatorEmail,
@@ -770,13 +790,27 @@ export const useCommentsStore = defineStore('comments', () => {
   const normalizeCommentForEditor = (node) => {
     if (!node || typeof node !== 'object') return node;
 
+    const stripTextStyleAttrs = (attrs) => {
+      if (!attrs) return attrs;
+      const rest = { ...attrs };
+      delete rest.fontSize;
+      delete rest.fontFamily;
+      delete rest.eastAsiaFontFamily;
+      return Object.keys(rest).length ? rest : undefined;
+    };
+
+    const normalizeMark = (mark) => {
+      if (!mark) return mark;
+      const typeName = typeof mark.type === 'string' ? mark.type : mark.type?.name;
+      const attrs = mark?.attrs ? { ...mark.attrs } : undefined;
+      if (typeName === 'textStyle' && attrs) {
+        return { ...mark, attrs: stripTextStyleAttrs(attrs) };
+      }
+      return { ...mark, attrs };
+    };
+
     const cloneMarks = (marks) =>
-      Array.isArray(marks)
-        ? marks.filter(Boolean).map((mark) => ({
-            ...mark,
-            attrs: mark?.attrs ? { ...mark.attrs } : undefined,
-          }))
-        : undefined;
+      Array.isArray(marks) ? marks.filter(Boolean).map((mark) => normalizeMark(mark)) : undefined;
 
     const cloneAttrs = (attrs) => (attrs && typeof attrs === 'object' ? { ...attrs } : undefined);
 
