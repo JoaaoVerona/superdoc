@@ -1,3 +1,10 @@
+# [1.8.0-next.11](https://github.com/superdoc-dev/superdoc/compare/v1.8.0-next.10...v1.8.0-next.11) (2026-01-21)
+
+
+### Features
+
+* add visual indication for tracked change, comments and nested comments ([#1770](https://github.com/superdoc-dev/superdoc/issues/1770)) ([8eb07e4](https://github.com/superdoc-dev/superdoc/commit/8eb07e43a1a17a9c41d50ff24937832d4e191aa5))
+
 # [1.8.0-next.10](https://github.com/superdoc-dev/superdoc/compare/v1.8.0-next.9...v1.8.0-next.10) (2026-01-21)
 
 
