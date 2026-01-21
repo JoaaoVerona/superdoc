@@ -1,3 +1,10 @@
+# [1.8.0-next.8](https://github.com/superdoc-dev/superdoc/compare/v1.8.0-next.7...v1.8.0-next.8) (2026-01-21)
+
+
+### Features
+
+* search cross block anchor ([#1799](https://github.com/superdoc-dev/superdoc/issues/1799)) ([09efa63](https://github.com/superdoc-dev/superdoc/commit/09efa634bbbdcd821f3841fe6382c1d7a41b8cb7))
+
 # [1.8.0-next.7](https://github.com/superdoc-dev/superdoc/compare/v1.8.0-next.6...v1.8.0-next.7) (2026-01-21)
 
 
