@@ -1,3 +1,12 @@
+## [1.8.2-next.2](https://github.com/superdoc-dev/superdoc/compare/v1.8.2-next.1...v1.8.2-next.2) (2026-01-22)
+
+
+### Bug Fixes
+
+* add double click event for annotation ([#1803](https://github.com/superdoc-dev/superdoc/issues/1803)) ([509c882](https://github.com/superdoc-dev/superdoc/commit/509c8821d4222130c68d99ef65f22aaf4796159b))
+* handling absolute paths for relationships ([#1811](https://github.com/superdoc-dev/superdoc/issues/1811)) ([8647358](https://github.com/superdoc-dev/superdoc/commit/864735874e93a8570e83372213f6d7ae96557a32))
+* header/footer double click to edit ([#1814](https://github.com/superdoc-dev/superdoc/issues/1814)) ([b4041d5](https://github.com/superdoc-dev/superdoc/commit/b4041d55773d39feba3f3bb606f3723e63495a60))
+
 ## [1.8.2-next.1](https://github.com/superdoc-dev/superdoc/compare/v1.8.1...v1.8.2-next.1) (2026-01-22)
 
 
