@@ -1,3 +1,10 @@
+## [1.8.1-next.1](https://github.com/superdoc-dev/superdoc/compare/v1.8.0...v1.8.1-next.1) (2026-01-22)
+
+
+### Bug Fixes
+
+* **importer:** wrap root-level inline nodes in paragraphs and disallow marks on passthroughInline ([#1804](https://github.com/superdoc-dev/superdoc/issues/1804)) ([7d0a752](https://github.com/superdoc-dev/superdoc/commit/7d0a7528493c2c7cea96ac72632db1f14f1f7fbc))
+
 # [1.8.0](https://github.com/superdoc-dev/superdoc/compare/v1.7.0...v1.8.0) (2026-01-21)
 
 
