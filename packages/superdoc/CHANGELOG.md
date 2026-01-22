@@ -1,3 +1,10 @@
+## [1.8.1-next.3](https://github.com/superdoc-dev/superdoc/compare/v1.8.1-next.2...v1.8.1-next.3) (2026-01-22)
+
+
+### Bug Fixes
+
+* include doc default fonts and stabilize linked-style run properties ([b2d9fc9](https://github.com/superdoc-dev/superdoc/commit/b2d9fc977198ee3c131659ec312e0fdb4309af2e))
+
 ## [1.8.1-next.2](https://github.com/superdoc-dev/superdoc/compare/v1.8.1-next.1...v1.8.1-next.2) (2026-01-22)
 
 
