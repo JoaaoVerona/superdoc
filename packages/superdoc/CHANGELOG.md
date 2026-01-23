@@ -1,3 +1,12 @@
+## [1.8.2-next.3](https://github.com/superdoc-dev/superdoc/compare/v1.8.2-next.2...v1.8.2-next.3) (2026-01-23)
+
+
+### Bug Fixes
+
+* cursor delay when dragging over a document ([#1802](https://github.com/superdoc-dev/superdoc/issues/1802)) ([58691f1](https://github.com/superdoc-dev/superdoc/commit/58691f1f1573fb18ad724a78db454d33d3c3e99f))
+* preserve original document namespace declarations during export ([#1812](https://github.com/superdoc-dev/superdoc/issues/1812)) ([4a3da75](https://github.com/superdoc-dev/superdoc/commit/4a3da7572bb37aadc9373cd4438a9fbc5add88e7))
+* table background/width and marker color fixes ([#1795](https://github.com/superdoc-dev/superdoc/issues/1795)) ([50fc3ad](https://github.com/superdoc-dev/superdoc/commit/50fc3ad9f4b5d7069673cee84b21570331eca374))
+
 ## [1.8.2-next.2](https://github.com/superdoc-dev/superdoc/compare/v1.8.2-next.1...v1.8.2-next.2) (2026-01-22)
 
 
