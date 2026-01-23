@@ -1,3 +1,16 @@
+# [1.9.0-next.1](https://github.com/superdoc-dev/superdoc/compare/v1.8.3...v1.9.0-next.1) (2026-01-23)
+
+
+### Bug Fixes
+
+* preserve style on row insertion ([#1553](https://github.com/superdoc-dev/superdoc/issues/1553)) ([92f67dc](https://github.com/superdoc-dev/superdoc/commit/92f67dcf17456bd1ead0dc0a993fc6ae24eead5a))
+* table resize ([#1821](https://github.com/superdoc-dev/superdoc/issues/1821)) ([e7e1eb8](https://github.com/superdoc-dev/superdoc/commit/e7e1eb8a42317cc63f02a51fa7955a2ac1614a0e))
+
+
+### Features
+
+* fix node types export, add introspection ([#1815](https://github.com/superdoc-dev/superdoc/issues/1815)) ([9b8d0d4](https://github.com/superdoc-dev/superdoc/commit/9b8d0d491dd9a9422ca44505471a34bc79894b80))
+
 ## [1.8.3](https://github.com/superdoc-dev/superdoc/compare/v1.8.2...v1.8.3) (2026-01-23)
 
 
