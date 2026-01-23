@@ -32,6 +32,7 @@ function encode(params, encodedAttrs) {
     rowIndex,
     totalRows,
     totalColumns,
+    preferTableGridWidths,
     _referencedStyles,
   } = params.extraParams;
 
@@ -51,6 +52,7 @@ function encode(params, encodedAttrs) {
     rowIndex,
     totalRows,
     totalColumns,
+    preferTableGridWidths,
     _referencedStyles,
   });
 
