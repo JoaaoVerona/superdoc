@@ -1,3 +1,10 @@
+## [1.8.2-next.5](https://github.com/superdoc-dev/superdoc/compare/v1.8.2-next.4...v1.8.2-next.5) (2026-01-23)
+
+
+### Bug Fixes
+
+* issue indenting list items (SD-1594) ([#1816](https://github.com/superdoc-dev/superdoc/issues/1816)) ([3f84beb](https://github.com/superdoc-dev/superdoc/commit/3f84beb06b0daa47a613fe256f625d3157b6fbc0))
+
 ## [1.8.2-next.4](https://github.com/superdoc-dev/superdoc/compare/v1.8.2-next.3...v1.8.2-next.4) (2026-01-23)
 
 
