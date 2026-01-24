@@ -1,3 +1,10 @@
+# [1.9.0-next.4](https://github.com/superdoc-dev/superdoc/compare/v1.9.0-next.3...v1.9.0-next.4) (2026-01-24)
+
+
+### Bug Fixes
+
+* correct cursor position when typing after fully track-deleted content ([#1828](https://github.com/superdoc-dev/superdoc/issues/1828)) ([8de1c5f](https://github.com/superdoc-dev/superdoc/commit/8de1c5f142fae6b2362d3640b698fe6277ab45d7))
+
 # [1.9.0-next.3](https://github.com/superdoc-dev/superdoc/compare/v1.9.0-next.2...v1.9.0-next.3) (2026-01-24)
 
 
