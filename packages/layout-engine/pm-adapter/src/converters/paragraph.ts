@@ -338,10 +338,16 @@ export function fieldAnnotationNodeToRun(
   if (typeof textHighlight === 'string') run.textHighlight = textHighlight;
 
   // Text formatting
+  // Prefer explicit attrs on the annotation node; they should override metadata formatting.
   const formatting = fieldMetadata?.formatting;
-  if (attrs.bold === true || formatting?.bold === true) run.bold = true;
-  if (attrs.italic === true || formatting?.italic === true) run.italic = true;
-  if (attrs.underline === true || formatting?.underline === true) run.underline = true;
+  if (attrs.bold === true) run.bold = true;
+  else if (attrs.bold !== false && formatting?.bold === true) run.bold = true;
+
+  if (attrs.italic === true) run.italic = true;
+  else if (attrs.italic !== false && formatting?.italic === true) run.italic = true;
+
+  if (attrs.underline === true) run.underline = true;
+  else if (attrs.underline !== false && formatting?.underline === true) run.underline = true;
 
   // Position tracking
   const pos = positions.get(node);
