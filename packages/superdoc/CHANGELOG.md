@@ -1,3 +1,10 @@
+# [1.9.0-next.8](https://github.com/superdoc-dev/superdoc/compare/v1.9.0-next.7...v1.9.0-next.8) (2026-01-28)
+
+
+### Bug Fixes
+
+* annotation and interaction issues ([#1847](https://github.com/superdoc-dev/superdoc/issues/1847)) ([ffb1055](https://github.com/superdoc-dev/superdoc/commit/ffb1055dcf21916a23b221655a9eff8828d49fa0))
+
 # [1.9.0-next.7](https://github.com/superdoc-dev/superdoc/compare/v1.9.0-next.6...v1.9.0-next.7) (2026-01-27)
 
 
