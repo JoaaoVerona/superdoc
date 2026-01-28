@@ -1,7 +1,4 @@
-import type {
-  FieldAnnotationRun,
-  FieldAnnotationMetadata,
-} from '@superdoc/contracts';
+import type { FieldAnnotationRun, FieldAnnotationMetadata } from '@superdoc/contracts';
 import type { PMNode } from '../../types.js';
 import { type InlineConverterParams } from './common';
 import { resolveNodeSdtMetadata } from '../../sdt/index.js';
@@ -13,16 +10,12 @@ import { resolveNodeSdtMetadata } from '../../sdt/index.js';
  * They render with distinctive styling (border, background, rounded corners) and can
  * contain different content types (text, image, signature, etc.).
  *
- * @param nodeForRun - FieldAnnotation PM node with attrs containing field configuration
- * @param positions - Position map for ProseMirror node tracking (pmStart/pmEnd)
- * @param fieldMetadata - SDT metadata extracted from the fieldAnnotation node
+ * @param params - Inline converter parameters
+ * @param params.node - FieldAnnotation PM node with attrs containing field configuration
+ * @param params.positions - Position map for ProseMirror node tracking (pmStart/pmEnd)
  * @returns FieldAnnotationRun object with all extracted properties
  */
-export function fieldAnnotationNodeToRun({
-  node,
-  positions,
-}: InlineConverterParams): FieldAnnotationRun {
-
+export function fieldAnnotationNodeToRun({ node, positions }: InlineConverterParams): FieldAnnotationRun {
   const fieldMetadata = resolveNodeSdtMetadata(node, 'fieldAnnotation') as FieldAnnotationMetadata | null;
 
   // If there's inner content, extract text to use as displayLabel override
@@ -137,7 +130,7 @@ export function fieldAnnotationNodeToRun({
   else if (attrs.underline !== false && formatting?.underline === true) run.underline = true;
 
   // Position tracking
-  const pos = positions.get(nodeForRun);
+  const pos = positions.get(node);
   if (pos) {
     run.pmStart = pos.start;
     run.pmEnd = pos.end;
@@ -150,4 +143,3 @@ export function fieldAnnotationNodeToRun({
 
   return run;
 }
-

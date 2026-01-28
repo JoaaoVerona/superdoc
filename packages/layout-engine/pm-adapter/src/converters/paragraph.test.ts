@@ -1326,6 +1326,32 @@ describe('paragraph converters', () => {
         });
       });
 
+      it('should preserve PM positions when fieldAnnotation has inner content', () => {
+        const fieldNode: PMNode = {
+          type: 'fieldAnnotation',
+          content: [{ type: 'text', text: 'Field value' }],
+        };
+        positions.set(fieldNode, { start: 12, end: 20 });
+
+        const blocks = paragraphToFlowBlocks(
+          {
+            type: 'paragraph',
+            content: [fieldNode],
+          },
+          nextBlockId,
+          positions,
+          'Arial',
+          16,
+        );
+
+        expect(blocks).toHaveLength(1);
+        const para = blocks[0] as { kind: string; runs: unknown[] };
+        const run = para.runs[0] as { kind?: string; pmStart?: number; pmEnd?: number };
+        expect(run.kind).toBe('fieldAnnotation');
+        expect(run.pmStart).toBe(12);
+        expect(run.pmEnd).toBe(20);
+      });
+
       it('should use displayLabel when fieldAnnotation has no content', () => {
         const blocks = paragraphToFlowBlocks(
           {
@@ -1993,6 +2019,26 @@ describe('paragraph converters', () => {
         expect(blocks).toHaveLength(3);
         expect(blocks[1].kind).toBe('pageBreak');
         expect(blocks[1].attrs).toEqual({ pageBreakType: 'page', customAttr: 'value' });
+      });
+
+      it('should assign unique IDs to page breaks inserted within a paragraph', () => {
+        const hardBreakNode: PMNode = {
+          type: 'hardBreak',
+          attrs: { pageBreakType: 'page' },
+        };
+        const para: PMNode = {
+          type: 'paragraph',
+          content: [{ type: 'text', text: 'Before' }, hardBreakNode, { type: 'text', text: 'After' }],
+        };
+
+        const blocks = paragraphToFlowBlocks(para, nextBlockId, positions, 'Arial', 16);
+
+        expect(blocks).toHaveLength(3);
+        const breakIndex = blocks.findIndex((block) => block.kind === 'pageBreak');
+        expect(breakIndex).toBe(1);
+        const afterBreak = blocks[breakIndex + 1] as FlowBlock;
+        expect(afterBreak.kind).toBe('paragraph');
+        expect(blocks[breakIndex].id).not.toBe(afterBreak.id);
       });
 
       it('should handle lineBreak with column break type', () => {
