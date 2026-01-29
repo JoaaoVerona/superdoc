@@ -1,3 +1,12 @@
+## [1.9.1-next.1](https://github.com/superdoc-dev/superdoc/compare/v1.9.0...v1.9.1-next.1) (2026-01-29)
+
+
+### Bug Fixes
+
+* **comments:** pass superdoc instance when canceling pending comment ([#1862](https://github.com/superdoc-dev/superdoc/issues/1862)) ([4982bac](https://github.com/superdoc-dev/superdoc/commit/4982bac97c5f7e141d7029b9ba7b832ee509e165))
+* selection/caret issues ([#1865](https://github.com/superdoc-dev/superdoc/issues/1865)) ([3f627fb](https://github.com/superdoc-dev/superdoc/commit/3f627fbe83e715bb9b5b01f6711d6d84b57e2ed6))
+* use stable comment ids for imported comments ([#1863](https://github.com/superdoc-dev/superdoc/issues/1863)) ([0c330d0](https://github.com/superdoc-dev/superdoc/commit/0c330d0394e6b18d942a7a3ed6f090a5b9f036e4))
+
 # [1.9.0](https://github.com/superdoc-dev/superdoc/compare/v1.8.3...v1.9.0) (2026-01-29)
 
 
