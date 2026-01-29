@@ -1,3 +1,10 @@
+# [1.10.0-next.4](https://github.com/superdoc-dev/superdoc/compare/v1.10.0-next.3...v1.10.0-next.4) (2026-01-29)
+
+
+### Bug Fixes
+
+* **collaboration:** add debouncing to header/footer Y.Doc updates ([#1861](https://github.com/superdoc-dev/superdoc/issues/1861)) ([90d0f65](https://github.com/superdoc-dev/superdoc/commit/90d0f6549e9c207e127da72466a41c63035c7c85))
+
 # [1.10.0-next.3](https://github.com/superdoc-dev/superdoc/compare/v1.10.0-next.2...v1.10.0-next.3) (2026-01-29)
 
 
