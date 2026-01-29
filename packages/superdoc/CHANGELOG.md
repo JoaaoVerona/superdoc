@@ -1,3 +1,11 @@
+# [1.9.0-next.13](https://github.com/superdoc-dev/superdoc/compare/v1.9.0-next.12...v1.9.0-next.13) (2026-01-29)
+
+
+### Bug Fixes
+
+* incorrect list counter calculation (SD-1658) ([#1867](https://github.com/superdoc-dev/superdoc/issues/1867)) ([a960a65](https://github.com/superdoc-dev/superdoc/commit/a960a656235d2c4daa7b5f169e79bfba5f057ff6))
+* list numbering sync for cloned defs and zero start overrides ([c21301b](https://github.com/superdoc-dev/superdoc/commit/c21301b64168edb4feedebc31aeba17e08ebaed2))
+
 # [1.9.0-next.12](https://github.com/superdoc-dev/superdoc/compare/v1.9.0-next.11...v1.9.0-next.12) (2026-01-28)
 
 
