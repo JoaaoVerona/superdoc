@@ -9,23 +9,19 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Generate token
-        id: generate_token
-        uses: actions/create-github-app-token@v2
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-
       - uses: actions/checkout@v4
-        with:
-          token: ${{ steps.generate_token.outputs.token }}
 
       - uses: pnpm/action-setup@v4
 
@@ -62,9 +58,18 @@ jobs:
           cp -r ./packages/esign/demo/dist ./demos-dist/esign
           echo '<html><head><meta http-equiv="refresh" content="0; url=/template-builder/"></head></html>' > ./demos-dist/index.html
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          personal_token: ${{ steps.generate_token.outputs.token }}
-          publish_dir: ./demos-dist
-          cname: demos.superdoc.dev
+          path: ./demos-dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
