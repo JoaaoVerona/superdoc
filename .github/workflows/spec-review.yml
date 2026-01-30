@@ -5,6 +5,10 @@ on:
     paths:
       - 'packages/super-editor/src/core/super-converter/v3/handlers/**'
 
+concurrency:
+  group: spec-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   spec-review:
     runs-on: ubuntu-latest
