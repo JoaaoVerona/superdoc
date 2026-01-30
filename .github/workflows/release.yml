@@ -1,15 +1,12 @@
 name: 📦 Release [auto]
 
 on:
-  # TEMPORARILY DISABLED - re-enable after main/stable branch cleanu
-  # push:
-  #   branches:
-  #     - main
-  #     - stable
-  #     - '*.x' # Maintenance branches
-  #   paths:
-  #     - 'packages/**'
-  #     - '!**.md'
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/**'
+      - '!**.md'
   workflow_dispatch:
 
 permissions:
