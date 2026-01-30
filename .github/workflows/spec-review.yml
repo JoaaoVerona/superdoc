@@ -55,21 +55,42 @@ jobs:
           # Get the diff for review
           gh pr diff ${{ github.event.pull_request.number }} > /tmp/pr-diff.txt
 
-          # Run Claude Code review
+          # Run Claude Code review with structured output format
           REVIEW=$(claude --print "You are reviewing a PR for OOXML spec compliance in the SuperDoc project.
 
           The changed files are OOXML element handlers that convert between XML and ProseMirror JSON.
 
           Use the ecma-spec MCP tools to look up relevant spec sections for any OOXML elements being handled.
 
-          Review the diff below and check:
+          Review the diff and check:
           1. Are OOXML elements handled according to the ECMA-376 spec?
           2. Are any required attributes missing?
           3. Are there any spec violations or edge cases not handled?
+          4. Are any non-existent attributes being referenced?
 
-          For each finding, cite the relevant spec section.
+          OUTPUT FORMAT (use exactly this structure):
 
-          If everything looks correct, say so briefly.
+          ### Status
+          - [ ] PASS - No spec violations found
+          - [ ] FAIL - Spec violations detected
+
+          (Check exactly ONE of the above)
+
+          ### Changed Files
+          (list files reviewed)
+
+          ### Findings
+          (For each finding, include:)
+          **Issue**: <description>
+          **Location**: <file:line>
+          **Spec Reference**: ECMA-376 Part X, Section Y.Z
+          **Expected**: <what the spec says>
+          **Actual**: <what the code does>
+
+          ### Recommendation
+          (What should be fixed, or 'No action required' if passing)
+
+          ---
 
           Changed files:
           ${{ steps.changed.outputs.files }}
@@ -78,9 +99,16 @@ jobs:
           $(cat /tmp/pr-diff.txt)")
 
           # Save review output
-          echo "review<<EOF" >> $GITHUB_OUTPUT
-          echo "$REVIEW" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "$REVIEW" > /tmp/review-raw.txt
+
+          # Check if review found violations
+          if echo "$REVIEW" | grep -q "\[x\] FAIL"; then
+            echo "has_violations=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_violations=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Build comment
           {
             echo "## OOXML Spec Compliance Review"
             echo
@@ -90,9 +118,19 @@ jobs:
             echo "*Automated review using [ECMA-376 MCP Server](https://ooxml.dev)*"
           } > /tmp/review-comment.md
 
+          echo "review<<EOF" >> $GITHUB_OUTPUT
+          echo "$REVIEW" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Post review comment
         if: steps.review.outputs.review != ''
         run: |
           gh pr comment ${{ github.event.pull_request.number }} --body-file /tmp/review-comment.md
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fail if violations found
+        if: steps.review.outputs.has_violations == 'true'
+        run: |
+          echo "::error::OOXML spec violations detected. See PR comment for details."
+          exit 1
