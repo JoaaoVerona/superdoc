@@ -1,4 +1,4 @@
-name: 📦 Release [auto]
+name: 📦 Release
 
 on:
   push:
@@ -9,6 +9,18 @@ on:
       - 'apps/**'
       - '!**.md'
   workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to release (leave empty for all)'
+        required: false
+        type: choice
+        options:
+          - all
+          - superdoc
+          - cli
+          - template-builder
+          - esign
+        default: all
 
 permissions:
   contents: write
@@ -34,7 +46,7 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.generate_token.outputs.token }}
 
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # Pinned commit hash for @v4
+      - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v5
         with:
@@ -70,6 +82,7 @@ jobs:
         run: pnpm run build
 
       - name: Release superdoc
+        if: ${{ inputs.package == 'superdoc' || inputs.package == 'all' || inputs.package == '' }}
         env:
           GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -78,6 +91,7 @@ jobs:
         run: pnpx semantic-release
 
       - name: Release template-builder
+        if: ${{ inputs.package == 'template-builder' || inputs.package == 'all' || inputs.package == '' }}
         env:
           GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -86,6 +100,7 @@ jobs:
         run: pnpx semantic-release
 
       - name: Release esign
+        if: ${{ inputs.package == 'esign' || inputs.package == 'all' || inputs.package == '' }}
         env:
           GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -94,29 +109,10 @@ jobs:
         run: pnpx semantic-release
 
       - name: Release cli
+        if: ${{ inputs.package == 'cli' || inputs.package == 'all' || inputs.package == '' }}
         env:
           GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         working-directory: apps/cli
         run: pnpx semantic-release
-
-      # Sync stable back to main after stable release
-      # - name: Sync stable to main
-      #   if: github.ref == 'refs/heads/stable'
-      #   env:
-      #     GH_TOKEN: ${{ steps.generate_token.outputs.token }}
-      #   run: |
-      #     # Configure git
-      #     git config user.name "github-actions[bot]"
-      #     git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      #     # Fetch latest main
-      #     git fetch origin main
-
-      #     # Checkout main and merge stable
-      #     git checkout main
-      #     git merge stable -m "chore: sync stable release to main [skip ci]"
-
-      #     # Push changes back to main
-      #     git push origin main
