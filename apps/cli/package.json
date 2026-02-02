@@ -29,5 +29,8 @@
     "@types/node": "catalog:",
     "typescript": "catalog:"
   },
-  "module": "src/index.ts"
+  "module": "src/index.ts",
+  "publishConfig": {
+    "access": "public"
+  }
 }
