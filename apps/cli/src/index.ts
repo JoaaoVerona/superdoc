@@ -50,6 +50,7 @@ async function expandGlobs(patterns: string[]): Promise<string[]> {
 
 /**
  * Format search results for human-readable output
+ * @returns Formatted string with match summary
  */
 function formatSearchResult(result: SearchResult): string {
   const lines: string[] = [];
