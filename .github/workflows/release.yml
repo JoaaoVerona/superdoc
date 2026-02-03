@@ -7,6 +7,7 @@ on:
     paths:
       - 'packages/**'
       - 'apps/**'
+      - '!apps/docs/**'
       - '!**.md'
   workflow_dispatch:
     inputs:
