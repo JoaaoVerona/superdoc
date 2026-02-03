@@ -27,6 +27,7 @@ Docs: https://github.com/superdoc-dev/superdoc
 
 /**
  * Expand glob patterns to file paths
+ * @param patterns - Array of file patterns (supports wildcards)
  */
 async function expandGlobs(patterns: string[]): Promise<string[]> {
   const files: string[] = [];
