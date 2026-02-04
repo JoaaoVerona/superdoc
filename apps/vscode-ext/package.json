@@ -1,5 +1,5 @@
 {
-  "name": "@superdoc-dev/vscode-extension",
+  "name": "@superdoc-dev/vscode-ext",
   "displayName": "SuperDoc for VS Code",
   "description": "Open and edit Word documents (.docx) directly in VS Code using SuperDoc",
   "version": "0.1.0",

@@ -8,7 +8,9 @@ function debug(message: string) {
 export class SuperDocEditorProvider implements vscode.CustomEditorProvider<SuperDocDocument> {
   public static readonly viewType = 'superdoc.docxEditor';
 
-  private readonly _onDidChangeCustomDocument = new vscode.EventEmitter<vscode.CustomDocumentEditEvent<SuperDocDocument>>();
+  private readonly _onDidChangeCustomDocument = new vscode.EventEmitter<
+    vscode.CustomDocumentEditEvent<SuperDocDocument>
+  >();
   public readonly onDidChangeCustomDocument = this._onDidChangeCustomDocument.event;
 
   constructor(private readonly context: vscode.ExtensionContext) {}
@@ -16,7 +18,7 @@ export class SuperDocEditorProvider implements vscode.CustomEditorProvider<Super
   async openCustomDocument(
     uri: vscode.Uri,
     openContext: vscode.CustomDocumentOpenContext,
-    _token: vscode.CancellationToken
+    _token: vscode.CancellationToken,
   ): Promise<SuperDocDocument> {
     debug(`Opening DOCX file: ${uri.fsPath}`);
     const fileUri = openContext.backupId ? vscode.Uri.parse(openContext.backupId) : uri;
@@ -27,15 +29,13 @@ export class SuperDocEditorProvider implements vscode.CustomEditorProvider<Super
   async resolveCustomEditor(
     document: SuperDocDocument,
     webviewPanel: vscode.WebviewPanel,
-    _token: vscode.CancellationToken
+    _token: vscode.CancellationToken,
   ): Promise<void> {
     debug(`Resolving custom editor for: ${document.uri.fsPath}`);
 
     webviewPanel.webview.options = {
       enableScripts: true,
-      localResourceRoots: [
-        vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'webview'),
-      ],
+      localResourceRoots: [vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'webview')],
     };
 
     webviewPanel.webview.html = this.getWebviewContent(webviewPanel.webview);
@@ -64,9 +64,7 @@ export class SuperDocEditorProvider implements vscode.CustomEditorProvider<Super
   private setupFileWatcher(document: SuperDocDocument, webview: vscode.Webview): vscode.FileSystemWatcher {
     const fileDir = vscode.Uri.joinPath(document.uri, '..');
     const fileName = path.basename(document.uri.fsPath);
-    const watcher = vscode.workspace.createFileSystemWatcher(
-      new vscode.RelativePattern(fileDir, fileName)
-    );
+    const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(fileDir, fileName));
 
     watcher.onDidChange(async (uri) => {
       // Ignore our own saves (within 1 second)
@@ -89,10 +87,10 @@ export class SuperDocEditorProvider implements vscode.CustomEditorProvider<Super
 
   private getWebviewContent(webview: vscode.Webview): string {
     const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'webview', 'main.js')
+      vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'webview', 'main.js'),
     );
     const styleUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'webview', 'style.css')
+      vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'webview', 'style.css'),
     );
     const nonce = getNonce();
 
@@ -145,13 +143,15 @@ export class SuperDocEditorProvider implements vscode.CustomEditorProvider<Super
 
   async backupCustomDocument(
     document: SuperDocDocument,
-    context: vscode.CustomDocumentBackupContext
+    context: vscode.CustomDocumentBackupContext,
   ): Promise<vscode.CustomDocumentBackup> {
     await vscode.workspace.fs.writeFile(context.destination, document.data);
     return {
       id: context.destination.toString(),
       delete: async () => {
-        try { await vscode.workspace.fs.delete(context.destination); } catch {}
+        try {
+          await vscode.workspace.fs.delete(context.destination);
+        } catch {}
       },
     };
   }
@@ -161,7 +161,10 @@ class SuperDocDocument implements vscode.CustomDocument {
   private _data: Uint8Array;
   private _lastSaveTime = 0;
 
-  constructor(public readonly uri: vscode.Uri, initialData: Uint8Array) {
+  constructor(
+    public readonly uri: vscode.Uri,
+    initialData: Uint8Array,
+  ) {
     this._data = initialData;
   }
 

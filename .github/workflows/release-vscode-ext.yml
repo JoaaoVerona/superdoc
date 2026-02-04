@@ -1,11 +1,13 @@
-name: Release VS Code Extension
+# Auto-releases on push to main (@next channel)
+# For stable (@latest): cherry-pick commits to stable branch, then manually dispatch this workflow
+name: 📦 Release vscode-ext
 
 on:
   push:
     branches: [main, stable]
     paths:
-      - 'apps/vscode-extension/**'
-      - '!apps/vscode-extension/*.md'
+      - 'apps/vscode-ext/**'
+      - '!apps/vscode-ext/*.md'
 
 permissions:
   contents: write
@@ -40,11 +42,11 @@ jobs:
 
       - name: Build
         run: pnpm run build
-        working-directory: apps/vscode-extension
+        working-directory: apps/vscode-ext
 
       - name: Release
         run: pnpx semantic-release
-        working-directory: apps/vscode-extension
+        working-directory: apps/vscode-ext
         env:
           GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
           VSCE_PAT: ${{ secrets.VSCE_PAT }}

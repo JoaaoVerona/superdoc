@@ -39,7 +39,7 @@ config.plugins.push([
   {
     teamKeys: ['SD'],
     addComment: true,
-    packageName: 'vscode-extension',
+    packageName: 'vscode-ext',
     commentTemplate: 'shipped in {package} {releaseLink} {channel}',
   },
 ]);
@@ -49,7 +49,7 @@ config.plugins.push([
   {
     assets: [{ path: '*.vsix', label: 'VS Code Extension' }],
     successComment:
-      ':tada: This ${issue.pull_request ? "PR" : "issue"} is included in **vscode-extension** v${nextRelease.version}',
+      ':tada: This ${issue.pull_request ? "PR" : "issue"} is included in **vscode-ext** v${nextRelease.version}',
   },
 ]);
 
