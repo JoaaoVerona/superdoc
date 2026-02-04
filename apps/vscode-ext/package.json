@@ -1,9 +1,9 @@
 {
   "name": "superdoc-vscode-ext",
-  "displayName": "SuperDoc for VS Code",
+  "displayName": "SuperDoc - Word Document Editor",
   "description": "Open and edit Word documents (.docx) directly in VS Code using SuperDoc",
-  "version": "1.0.0",
-  "publisher": "superdoc",
+  "version": "0.0.0",
+  "publisher": "superdoc-dev",
   "repository": "https://github.com/superdoc-dev/superdoc",
   "engines": {
     "vscode": "^1.107.0"
