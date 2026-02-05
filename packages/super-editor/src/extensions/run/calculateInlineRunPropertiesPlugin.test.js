@@ -45,6 +45,14 @@ const makeSchema = () =>
           rsidDel: { default: null },
         },
       },
+      pageReference: {
+        inline: true,
+        group: 'inline',
+        content: 'run+',
+        attrs: {
+          instruction: { default: null },
+        },
+      },
       text: { group: 'inline' },
     },
     marks: {
@@ -224,6 +232,50 @@ describe('calculateInlineRunPropertiesPlugin', () => {
     expect(paragraph.attrs.paragraphProperties).toBeNull();
     const firstRun = nextState.doc.nodeAt(firstRunPos);
     expect(firstRun?.attrs.runProperties).toBeNull();
+  });
+
+  it('updates paragraph runProperties when first run is nested inside an inline container', () => {
+    const schema = makeSchema();
+    const doc = schema.node('doc', null, [
+      schema.node('paragraph', null, [
+        schema.node('pageReference', { instruction: 'PAGEREF _Toc123456789 h' }, [
+          schema.node('run', null, schema.text('Ref')),
+        ]),
+        schema.node('run', null, schema.text(' tail')),
+      ]),
+    ]);
+    const state = createState(schema, doc);
+    const [nestedRunPos] = runPositions(state.doc);
+    const from = nestedRunPos + 1;
+    const to = nestedRunPos + 4;
+
+    const tr = state.tr.addMark(from, to, schema.marks.bold.create());
+    const { state: nextState } = state.applyTransaction(tr);
+
+    const paragraph = nextState.doc.firstChild;
+    expect(paragraph.attrs.paragraphProperties).toEqual({ runProperties: { bold: true } });
+  });
+
+  it('does not update paragraph runProperties when nested run is not first in paragraph', () => {
+    const schema = makeSchema();
+    const doc = schema.node('doc', null, [
+      schema.node('paragraph', null, [
+        schema.node('run', null, schema.text('Lead ')),
+        schema.node('pageReference', { instruction: 'PAGEREF _Toc123456789 h' }, [
+          schema.node('run', null, schema.text('Ref')),
+        ]),
+      ]),
+    ]);
+    const state = createState(schema, doc);
+    const [, nestedRunPos] = runPositions(state.doc);
+    const from = nestedRunPos + 1;
+    const to = nestedRunPos + 4;
+
+    const tr = state.tr.addMark(from, to, schema.marks.bold.create());
+    const { state: nextState } = state.applyTransaction(tr);
+
+    const paragraph = nextState.doc.firstChild;
+    expect(paragraph.attrs.paragraphProperties).toBeNull();
   });
 
   it('splits runs when inline properties differ', () => {
