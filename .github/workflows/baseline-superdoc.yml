@@ -207,7 +207,7 @@ jobs:
           SD_TESTING_R2_BASELINES_BUCKET_NAME: ${{ secrets.SD_TESTING_R2_BASELINES_BUCKET_NAME }}
           SD_TESTING_R2_ACCESS_KEY_ID: ${{ secrets.SD_TESTING_R2_ACCESS_KEY_ID }}
           SD_TESTING_R2_SECRET_ACCESS_KEY: ${{ secrets.SD_TESTING_R2_SECRET_ACCESS_KEY }}
-        run: pnpm baseline --ci
+        run: pnpm baseline --ci --filter watermarks
 
       - name: Summary
         if: steps.version.outputs.skip != 'true'

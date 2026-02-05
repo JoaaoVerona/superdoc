@@ -643,6 +643,13 @@ export async function uploadDirectoryToR2(options: { localDir: string; remotePre
   }
 
   const showProgress = shouldRenderProgress();
+  console.log(`Uploading ${files.length} baseline file(s) to R2...`);
+  if (totalBytes > 0) {
+    console.log(`Total size: ${formatBytes(totalBytes)}`);
+  }
+  if (!showProgress) {
+    console.log('Starting upload...');
+  }
   let lastUpdate = 0;
   let lastLineLength = 0;
   let uploadedBytes = 0;
