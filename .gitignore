@@ -68,4 +68,4 @@ reports/
 codex.config.json
 perf-baseline-results.json
 .claude
-dev/
+plans/
