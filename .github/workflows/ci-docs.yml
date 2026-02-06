@@ -1,4 +1,4 @@
-name: Documentation Validation
+name: CI Docs
 
 on:
   pull_request:
@@ -8,7 +8,6 @@ on:
 
 jobs:
   validate:
-    name: Validate Documentation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,6 +21,9 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
@@ -30,3 +32,12 @@ jobs:
 
       - name: Check Broken Links
         run: pnpm --filter @superdoc/docs check:links
+
+      - name: Check Code Imports
+        run: pnpm --filter @superdoc/docs check:imports
+
+      - name: Build Packages
+        run: pnpm --prefix packages/superdoc run build
+
+      - name: Test Code Examples
+        run: pnpm --filter @superdoc/docs test:examples

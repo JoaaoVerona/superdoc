@@ -27,12 +27,25 @@ const docx = await editor.exportDocx();
 
 ## Content formats
 
-```javascript
+<CodeGroup>
+```javascript Usage
 editor.commands.insertContent(value, { contentType: 'html' });      // Recommended for LLMs
 editor.commands.insertContent(value, { contentType: 'markdown' });
 editor.commands.insertContent(value, { contentType: 'text' });
 editor.commands.insertContent(value, { contentType: 'schema' });     // ProseMirror JSON
 ```
+
+```javascript Full Example
+import { Editor } from 'superdoc/super-editor';
+
+const editor = await Editor.open(yourFile);
+
+editor.commands.insertContent(value, { contentType: 'html' });      // Recommended for LLMs
+editor.commands.insertContent(value, { contentType: 'markdown' });
+editor.commands.insertContent(value, { contentType: 'text' });
+editor.commands.insertContent(value, { contentType: 'schema' });     // ProseMirror JSON
+```
+</CodeGroup>
 
 See [Import/Export](/getting-started/import-export) for format details, limitations, and guidance on choosing a format.
 
@@ -40,7 +53,8 @@ See [Import/Export](/getting-started/import-export) for format details, limitati
 
 Use `suggesting` mode so AI edits appear as tracked changes that users can accept or reject:
 
-```javascript
+<CodeGroup>
+```javascript Usage
 const contract = await readFile('./contract.docx');
 const editor = await Editor.open(contract, {
   documentMode: 'suggesting',
@@ -50,6 +64,21 @@ const editor = await Editor.open(contract, {
 editor.commands.insertContent(aiRevisions, { contentType: 'html' });
 const redlined = await editor.exportDocx();
 ```
+
+```javascript Full Example
+import { readFile } from 'node:fs/promises';
+import { Editor } from 'superdoc/super-editor';
+
+const contract = await readFile('./contract.docx');
+const editor = await Editor.open(contract, {
+  documentMode: 'suggesting',
+});
+
+// AI suggestions are tracked — users review them in Word
+editor.commands.insertContent(aiRevisions, { contentType: 'html' });
+const redlined = await editor.exportDocx();
+```
+</CodeGroup>
 
 ## LLM quick reference
 
