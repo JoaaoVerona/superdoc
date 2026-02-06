@@ -1,13 +1,13 @@
 ---
 title: Context Menu
-keywords: "context menu, slash menu, right-click menu, custom commands, slash commands"
+keywords: "context menu, right-click menu, custom commands"
 ---
 
-A contextual command menu triggered by typing `/` or right-clicking. Shows relevant actions based on cursor position and document state.
+A contextual command menu triggered by right-clicking. Shows relevant actions based on cursor position and document state.
 
 ## Quick start
 
-The context menu is **enabled by default**. Type `/` at the start of a paragraph or right-click anywhere in the document.
+The context menu is **enabled by default**. Right-click anywhere in the document to open it.
 
 To disable it:
 
@@ -49,32 +49,11 @@ new SuperDoc({
   Advanced: function to fully control menu contents. See [Menu Provider](#menu-provider).
 </ParamField>
 
-## Triggers
-
-The menu opens in two ways:
-
-| Trigger | How | Behavior |
-|---|---|---|
-| **Slash** | Type `/` in an empty paragraph or after a space | Opens at cursor position |
-| **Right-click** | Right-click anywhere in the document | Opens at click position |
-
-<Note>
-After using the slash trigger, there's a 5-second cooldown before `/` triggers the menu again. During cooldown, `/` types normally.
-</Note>
-
 ## Default items
 
-Items shown depend on the trigger type and document context.
+Items shown depend on document context.
 
-### Slash Trigger (`/`)
-
-| Item | Section | Condition |
-|---|---|---|
-| Insert table | `general` | Not inside a table |
-| Edit table | `general` | Inside a table |
-| Paste | `clipboard` | Always |
-
-### Right-click trigger
+### Right-click
 
 | Item | Section | Condition |
 |---|---|---|
@@ -194,7 +173,7 @@ Both `showWhen` and `menuProvider` receive a context object with the current edi
 
 | Property | Type | Description |
 |---|---|---|
-| `trigger` | `'slash' \| 'click'` | How the menu was opened |
+| `trigger` | `'click'` | How the menu was opened |
 | `editor` | `Object` | The editor instance |
 | `selectedText` | `string` | Currently selected text |
 | `hasSelection` | `boolean` | Whether text is selected |
