@@ -53,6 +53,11 @@ const makeSchema = () =>
           instruction: { default: null },
         },
       },
+      bookmarkStart: {
+        inline: true,
+        group: 'inline',
+        content: 'inline*',
+      },
       text: { group: 'inline' },
     },
     marks: {
@@ -202,6 +207,25 @@ describe('calculateInlineRunPropertiesPlugin', () => {
     const doc = paragraphDoc(schema);
     const state = createState(schema, doc);
     const { from, to } = runTextRange(state.doc, 0, 2);
+
+    const tr = state.tr.addMark(from, to, schema.marks.bold.create());
+    const { state: nextState } = state.applyTransaction(tr);
+
+    const paragraph = nextState.doc.firstChild;
+    expect(paragraph.attrs.paragraphProperties).toEqual({ runProperties: { bold: true } });
+  });
+
+  it('treats the first run inside inline wrappers as the paragraph first run', () => {
+    const schema = makeSchema();
+    const doc = schema.node('doc', null, [
+      schema.node('paragraph', null, [
+        schema.node('bookmarkStart', null, [schema.node('run', null, schema.text('Wrapped'))]),
+      ]),
+    ]);
+    const state = createState(schema, doc);
+    const [wrappedRunPos] = runPositions(state.doc);
+    const from = wrappedRunPos + 1;
+    const to = wrappedRunPos + 3;
 
     const tr = state.tr.addMark(from, to, schema.marks.bold.create());
     const { state: nextState } = state.applyTransaction(tr);
