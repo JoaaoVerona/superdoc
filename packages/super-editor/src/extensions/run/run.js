@@ -69,10 +69,6 @@ export const Run = OxmlNode.create({
     return ['span', base, 0];
   },
   addPmPlugins() {
-    return [
-      wrapTextInRunsPlugin(this.editor),
-      calculateInlineRunPropertiesPlugin(this.editor),
-      cleanupEmptyRunsPlugin,
-    ];
+    return [wrapTextInRunsPlugin(this.editor), calculateInlineRunPropertiesPlugin(this.editor), cleanupEmptyRunsPlugin];
   },
 });

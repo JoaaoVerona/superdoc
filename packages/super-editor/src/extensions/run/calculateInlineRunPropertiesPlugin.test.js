@@ -68,9 +68,7 @@ const makeSchema = () =>
   });
 
 const paragraphDoc = (schema, runAttrs = null, marks = [], text = 'Hello') =>
-  schema.node('doc', null, [
-    schema.node('paragraph', null, [schema.node('run', runAttrs, schema.text(text, marks))]),
-  ]);
+  schema.node('doc', null, [schema.node('paragraph', null, [schema.node('run', runAttrs, schema.text(text, marks))])]);
 
 const runPos = (doc) => {
   let pos = null;

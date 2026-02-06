@@ -54,8 +54,7 @@ const collectExpectedRunsFromImport = async (fileName, italicStyleSet) => {
     }
 
     const runProperties = runNode?.attrs?.runProperties;
-    const hasInlineItalic =
-      runProperties != null && Object.prototype.hasOwnProperty.call(runProperties, 'italic');
+    const hasInlineItalic = runProperties != null && Object.prototype.hasOwnProperty.call(runProperties, 'italic');
 
     let italic;
     if (hasInlineItalic) {

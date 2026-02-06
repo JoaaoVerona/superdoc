@@ -166,7 +166,13 @@ function segmentRunByInlineProps(runNode, paragraphNode, $pos, editor) {
 
   runNode.forEach((child) => {
     if (child.isText) {
-      const { inlineProps, inlineKey } = computeInlineRunProps(child.marks, runNode.attrs?.runProperties, paragraphNode, $pos, editor);
+      const { inlineProps, inlineKey } = computeInlineRunProps(
+        child.marks,
+        runNode.attrs?.runProperties,
+        paragraphNode,
+        $pos,
+        editor,
+      );
       const last = segments[segments.length - 1];
       if (last && inlineKey === lastKey) {
         last.content.push(child);
@@ -206,7 +212,7 @@ function computeInlineRunProps(marks, existingRunProperties, paragraphNode, $pos
       translatedNumbering: editor.converter?.translatedNumbering ?? {},
       translatedLinkedStyles: editor.converter?.translatedLinkedStyles ?? {},
     },
-    existingRunProperties?.styleId != null ? {styleId: existingRunProperties?.styleId} : {},
+    existingRunProperties?.styleId != null ? { styleId: existingRunProperties?.styleId } : {},
     paragraphProperties,
     false,
     Boolean(paragraphNode.attrs.paragraphProperties?.numberingProperties),

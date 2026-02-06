@@ -37,7 +37,9 @@ const hasInvalidParagraphRangeError = (calls) =>
   calls.some((args) =>
     args.some(
       (value) =>
-        (value instanceof RangeError && typeof value.message === 'string' && value.message.includes(INVALID_PARAGRAPH_RANGE_ERROR)) ||
+        (value instanceof RangeError &&
+          typeof value.message === 'string' &&
+          value.message.includes(INVALID_PARAGRAPH_RANGE_ERROR)) ||
         (typeof value === 'string' && value.includes(INVALID_PARAGRAPH_RANGE_ERROR)),
     ),
   );
@@ -145,7 +147,9 @@ describe('Headless Mode Optimization', () => {
 
       const testDoc = doc.create(null, [
         paragraph.create(null, [
-          pageReference.create({ instruction: 'PAGEREF _Toc123456789 h' }, [run.create(null, [editor.schema.text('Ref')])]),
+          pageReference.create({ instruction: 'PAGEREF _Toc123456789 h' }, [
+            run.create(null, [editor.schema.text('Ref')]),
+          ]),
           run.create(null, [editor.schema.text(' tail')]),
         ]),
       ]);
