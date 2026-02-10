@@ -1,4 +1,43 @@
 /* eslint-env node */
+const path = require('path')
+
+/**
+ * Commit filter for the superdoc meta-package.
+ *
+ * superdoc bundles code from multiple sub-packages, so we need git log to
+ * include commits touching any of them (not just packages/superdoc/).
+ * Keep in sync with .github/workflows/release-superdoc.yml paths.
+ */
+const SUPERDOC_PACKAGES = [
+  'packages/superdoc',
+  'packages/super-editor',
+  'packages/layout-engine',
+  'packages/ai',
+  'packages/word-layout',
+  'packages/preset-geometry',
+]
+
+Object.keys(require.cache)
+  .filter(m =>
+    path.posix.normalize(m).endsWith('/node_modules/git-log-parser/src/index.js')
+  )
+  .forEach(moduleName => {
+    const parse = require.cache[moduleName].exports.parse
+    require.cache[moduleName].exports.parse = (config, options) => {
+      const repoRoot = path.resolve(options.cwd, '..', '..')
+      const packagePaths = SUPERDOC_PACKAGES.map(p => path.join(repoRoot, p))
+
+      if (Array.isArray(config._)) {
+        config._.push(...packagePaths)
+      } else if (config._) {
+        config._ = [config._, ...packagePaths]
+      } else {
+        config._ = packagePaths
+      }
+
+      return parse(config, options)
+    }
+  })
 
 const branch = process.env.GITHUB_REF_NAME || process.env.CI_COMMIT_BRANCH
 
@@ -21,7 +60,6 @@ const config = {
   ],
   tagFormat: 'v${version}',
   plugins: [
-    '../../scripts/superdoc-commit-filter.cjs',
     '@semantic-release/commit-analyzer',
     '@semantic-release/release-notes-generator',
     // NPM plugin MUST come before git plugin
