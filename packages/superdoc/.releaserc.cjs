@@ -1,12 +1,9 @@
 /* eslint-env node */
 const path = require('path')
 
-/**
- * Commit filter for the superdoc meta-package.
- *
- * superdoc bundles code from multiple sub-packages, so we need git log to
- * include commits touching any of them (not just packages/superdoc/).
- * Keep in sync with .github/workflows/release-superdoc.yml paths.
+/*
+ * Commit filter: superdoc bundles multiple sub-packages, so git log must
+ * include commits touching any of them. Keep in sync with release-superdoc.yml.
  */
 const SUPERDOC_PACKAGES = [
   'packages/superdoc',
