@@ -250,7 +250,6 @@ const onEditorReady = ({ editor, presentationEditor }) => {
   presentationEditor.on('commentPositions', ({ positions }) => {
     const commentsConfig = proxy.$superdoc.config.modules?.comments;
     if (!commentsConfig || commentsConfig === false) return;
-    if (!positions || Object.keys(positions).length === 0) return;
     if (!shouldRenderCommentsInViewing.value) {
       commentsStore.clearEditorCommentPositions?.();
       return;
@@ -453,6 +452,11 @@ const editorOptions = (doc) => {
     proxy.$superdoc.listeners?.('fonts-resolved')?.length > 0 ? proxy.$superdoc.listeners('fonts-resolved')[0] : null;
   const useLayoutEngine = proxy.$superdoc.config.useLayoutEngine !== false;
 
+  const ydocFragment = doc.ydoc?.getXmlFragment?.('supereditor');
+  const ydocMeta = doc.ydoc?.getMap?.('meta');
+  const ydocHasContent = (ydocFragment && ydocFragment.length > 0) || (ydocMeta && Boolean(ydocMeta.get('docx')));
+  const isNewFile = doc.isNewFile && !ydocHasContent;
+
   const options = {
     isDebug: proxy.$superdoc.config.isDebug || false,
     documentId: doc.id,
@@ -493,7 +497,7 @@ const editorOptions = (doc) => {
     onTransaction: onEditorTransaction,
     ydoc: doc.ydoc,
     collaborationProvider: doc.provider || null,
-    isNewFile: doc.isNewFile || false,
+    isNewFile,
     handleImageUpload: proxy.$superdoc.config.handleImageUpload,
     externalExtensions: proxy.$superdoc.config.editorExtensions || [],
     suppressDefaultDocxStyles: proxy.$superdoc.config.suppressDefaultDocxStyles,
