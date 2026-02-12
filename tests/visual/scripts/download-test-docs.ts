@@ -5,11 +5,13 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { createR2Client, DOCUMENTS_PREFIX } from './r2.js';
+import { createR2Client, ensureR2Auth, DOCUMENTS_PREFIX } from './r2.js';
 
 const TEST_DATA_DIR = path.resolve(import.meta.dirname, '../test-data');
 
 async function main() {
+  ensureR2Auth();
+
   const client = await createR2Client();
 
   console.log('Listing documents in R2...');
@@ -20,6 +22,7 @@ async function main() {
     process.exit(0);
   }
 
+  const quiet = !!process.env.CI;
   console.log(`Found ${keys.length} documents.`);
 
   const toDownload: { key: string; relative: string; dest: string }[] = [];
@@ -48,14 +51,14 @@ async function main() {
       batch.map(async ({ key, relative, dest }) => {
         await client.getObject(key, dest);
         downloaded++;
-        console.log(`  \u2713 ${relative}`);
+        if (!quiet) console.log(`  ✓ ${relative}`);
       }),
     );
 
     for (let j = 0; j < results.length; j++) {
       if (results[j].status === 'rejected') {
         failed++;
-        console.error(`  \u2717 ${batch[j].relative}: ${(results[j] as PromiseRejectedResult).reason?.message}`);
+        if (!quiet) console.error(`  ✗ ${batch[j].relative}: ${(results[j] as PromiseRejectedResult).reason?.message}`);
       }
     }
   }
