@@ -279,6 +279,7 @@ function renderRemoteCaret(options: {
     caretEl.style.borderLeft = `${options.cursorStyles.CARET_WIDTH}px solid ${color}`;
     caretEl.style.pointerEvents = 'none';
     caretEl.style.transition = 'opacity 100ms ease-out';
+    caretEl.style.willChange = 'transform';
     caretEl.setAttribute('data-client-id', options.cursor.clientId.toString());
     caretEl.setAttribute('aria-hidden', 'true');
 
