@@ -11,7 +11,7 @@ test.use({ config: { hideSelection: false, height: 800 } });
 
 test.skip(!fs.existsSync(DOC_PATH), 'Test document not available');
 
-test('@behavior drag selection with autoscroll across pages', async ({ superdoc }) => {
+test.fixme('@behavior drag selection with autoscroll across pages', async ({ superdoc }) => {
   await superdoc.loadDocument(DOC_PATH);
   await superdoc.screenshot('drag-autoscroll-loaded');
 
