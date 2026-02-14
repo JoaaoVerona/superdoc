@@ -1,3 +1,10 @@
+## [1.13.1](https://github.com/superdoc-dev/superdoc/compare/v1.13.0...v1.13.1) (2026-02-14)
+
+
+### Bug Fixes
+
+* **build:** remove dead vite-plugin-node-polyfills from UMD externals ([91de1fc](https://github.com/superdoc-dev/superdoc/commit/91de1fc2e47b0061d088db5d46b0da4cc07dc837))
+
 # [1.13.0](https://github.com/superdoc-dev/superdoc/compare/v1.12.0...v1.13.0) (2026-02-14)
 
 
