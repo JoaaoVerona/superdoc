@@ -20,8 +20,10 @@ const CRITICAL_PATHS = [
 const SENSITIVE_PATHS = [
   'packages/super-editor/src/extensions/',
   'packages/super-editor/src/core/',
+  'packages/superdoc/src/',
   'packages/layout-engine/contracts/',
   'packages/esign/',
+  'shared/',
 ];
 
 const TEST_PATTERNS = [

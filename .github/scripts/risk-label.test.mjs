@@ -11,7 +11,6 @@ describe('classify', () => {
     const result = classify([
       'apps/docs/guides/foo.mdx',
       'packages/react/src/SuperDocEditor.tsx',
-      'shared/utils/helpers.js',
       '.github/workflows/ci.yml',
     ]);
     assert.equal(result.level, 'low');
@@ -33,6 +32,31 @@ describe('classify', () => {
     assert.equal(
       classify(['packages/layout-engine/contracts/src/index.ts']).level,
       'sensitive',
+    );
+  });
+
+  it('sensitive: shared utilities', () => {
+    assert.equal(
+      classify(['shared/font-utils/index.js']).level,
+      'sensitive',
+    );
+  });
+
+  it('sensitive: superdoc src (non-core)', () => {
+    assert.equal(
+      classify(['packages/superdoc/src/SuperDoc.vue']).level,
+      'sensitive',
+    );
+    assert.equal(
+      classify(['packages/superdoc/src/components/CommentsLayer/FloatingComments.vue']).level,
+      'sensitive',
+    );
+  });
+
+  it('critical: superdoc/src/core still wins over sensitive superdoc/src', () => {
+    assert.equal(
+      classify(['packages/superdoc/src/core/SuperDoc.js']).level,
+      'critical',
     );
   });
 
