@@ -84,7 +84,24 @@ async function filePathClassify(files) {
 
 // ── Layer 2: Haiku triage ────────────────────────────────────────────────────
 
-function buildHaikuPrompt(pr, title, files, diff) {
+const HAIKU_TRIAGE_TOOL = {
+  name: 'classify_risk',
+  description: 'Classify the risk level of a PR based on the diff.',
+  input_schema: {
+    type: 'object',
+    required: ['level', 'confidence', 'change_type', 'summary', 'needs_deep_analysis', 'reason_for_deep'],
+    properties: {
+      level: { type: 'string', enum: ['critical', 'sensitive', 'low'] },
+      confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
+      change_type: { type: 'string', enum: ['behavioral', 'additive', 'mechanical'] },
+      summary: { type: 'string', description: 'One sentence summary of the change' },
+      needs_deep_analysis: { type: 'boolean' },
+      reason_for_deep: { type: 'string', description: 'Why deep analysis is or is not needed' },
+    },
+  },
+};
+
+function buildHaikuPrompt(files, diff) {
   const maxLines = 400;
   const lines = diff.split('\n');
   const usable = lines.length > maxLines
@@ -114,61 +131,35 @@ ${files}
 ${usable}
 \`\`\`
 
-Classify this PR by reading the diff. Determine if changes are:
+Classify this PR. Determine if changes are:
 - **behavioral**: modify existing logic, change function signatures, alter control flow
 - **additive**: new functions/files/tests, no existing behavior touched
 - **mechanical**: renames, formatting, comments, type annotations only
 
-Be conservative — when uncertain, classify higher.
-
-IMPORTANT: Your entire response must be a single JSON object. No preamble, no explanation, no markdown.
-{"level":"critical|sensitive|low","confidence":"high|medium|low","change_type":"behavioral|additive|mechanical","summary":"One sentence","needs_deep_analysis":true|false,"reason_for_deep":"Why or why not"}`;
+Be conservative — when uncertain, classify higher. Use the classify_risk tool.`;
 }
 
 async function haikuTriage(pr, title, files, diff) {
-  const { query } = await import('@anthropic-ai/claude-agent-sdk');
-  const prompt = buildHaikuPrompt(pr, title, files, diff);
+  const Anthropic = (await import('@anthropic-ai/sdk')).default;
+  const client = new Anthropic();
 
-  let totalCost = 0;
-  const MAX_ATTEMPTS = 2;
+  const start = Date.now();
+  const response = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 512,
+    tools: [HAIKU_TRIAGE_TOOL],
+    tool_choice: { type: 'tool', name: 'classify_risk' },
+    messages: [{ role: 'user', content: buildHaikuPrompt(files.join('\n'), diff) }],
+  });
+  const durationMs = Date.now() - start;
 
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    let resultText = '';
-    let cost = 0;
-    let durationMs = 0;
-
-    for await (const msg of query({
-      prompt,
-      options: {
-        allowedTools: [],
-        permissionMode: 'bypassPermissions',
-        model: 'haiku',
-        maxTurns: 1,
-      },
-    })) {
-      if (msg.type === 'assistant' && msg.message?.content) {
-        for (const block of msg.message.content) {
-          if (block.type === 'text') resultText = block.text;
-        }
-      }
-      if (msg.type === 'result') {
-        cost = msg.total_cost_usd || 0;
-        durationMs = msg.duration_api_ms || msg.duration_ms || 0;
-      }
-    }
-
-    totalCost += cost;
-    const parsed = extractJSON(resultText);
-    if (parsed) {
-      return { ...parsed, cost: totalCost, durationMs };
-    }
-
-    if (attempt < MAX_ATTEMPTS) {
-      console.log(`  Haiku retry (no JSON in response)...`);
-    } else {
-      throw new Error(`Haiku failed to produce JSON: ${resultText.slice(0, 200)}`);
-    }
+  const toolBlock = response.content.find(b => b.type === 'tool_use');
+  if (!toolBlock) {
+    throw new Error('Haiku did not call classify_risk tool');
   }
+
+  const cost = (response.usage.input_tokens * 0.80 + response.usage.output_tokens * 4.0) / 1_000_000;
+  return { ...toolBlock.input, cost, durationMs };
 }
 
 // ── Layer 3: Sonnet deep analysis ────────────────────────────────────────────
