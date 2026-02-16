@@ -18,9 +18,13 @@
       "groupName": "dev dependencies (patch)"
     },
     {
-      "description": "Don't touch the rolldown-vite override",
+      "description": "Ignore demos and examples — not shipped to users",
+      "matchFileNames": ["demos/**", "examples/**"],
+      "enabled": false
+    },
+    {
+      "description": "Don't touch vite — overridden with rolldown-vite",
       "matchPackageNames": ["vite"],
-      "matchFileNames": ["package.json"],
       "enabled": false
     }
   ],
