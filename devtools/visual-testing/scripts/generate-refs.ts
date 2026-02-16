@@ -408,19 +408,38 @@ async function captureDocument(page: Page, doc: DocumentInfo, provider: CorpusPr
   // Ensure output directory exists
   fs.mkdirSync(doc.outputDir, { recursive: true });
 
-  // Capture each page
-  for (let i = 0; i < pageCount; i++) {
+  // Capture each page. Re-check count each iteration because late pagination updates
+  // can remove trailing pages after initial stabilization.
+  let i = 0;
+  while (true) {
+    const currentCount = await pages.count();
+    if (i >= currentCount) break;
+
     const pageLocator = pages.nth(i);
     const pageNum = String(i + 1).padStart(3, '0');
     const filename = `p${pageNum}.png`;
     const outputPath = path.join(doc.outputDir, filename);
 
-    await pageLocator.screenshot({
-      path: outputPath,
-      animations: 'disabled',
-    });
+    try {
+      await pageLocator.screenshot({
+        path: outputPath,
+        animations: 'disabled',
+      });
+    } catch (error) {
+      const refreshedCount = await pages.count();
+      if (i >= refreshedCount) {
+        console.warn(
+          colors.warning(
+            `  ⚠ Page count changed during capture for ${doc.relativePath} (stopped at ${refreshedCount} page(s))`,
+          ),
+        );
+        break;
+      }
+      throw error;
+    }
 
     capturedFiles.push(outputPath);
+    i += 1;
   }
 
   return capturedFiles;

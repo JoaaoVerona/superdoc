@@ -20,6 +20,9 @@ const DEFAULT_CANDIDATE_ROOT = path.join(REPO_ROOT, 'tests', 'layout-snapshots',
 const DEFAULT_REFERENCE_BASE = path.join(REPO_ROOT, 'tests', 'layout-snapshots', 'reference');
 const DEFAULT_REPORTS_ROOT = path.join(REPO_ROOT, 'tests', 'layout-snapshots', 'reports');
 const DEFAULT_VISUAL_WORKDIR = path.join(REPO_ROOT, 'devtools', 'visual-testing');
+const DEFAULT_INPUT_ROOT = process.env.SUPERDOC_CORPUS_ROOT
+  ? path.resolve(process.env.SUPERDOC_CORPUS_ROOT)
+  : path.join(REPO_ROOT, 'test-corpus');
 const CANDIDATE_EXPORT_SCRIPT_PATH = path.join(SCRIPT_DIR, 'export-layout-snapshots.mjs');
 const NPM_EXPORT_SCRIPT_PATH = path.join(SCRIPT_DIR, 'export-layout-snapshots-npm.mjs');
 const NPM_PACKAGE_NAME = 'superdoc';
@@ -45,6 +48,7 @@ Options:
       --pipeline <mode>               headless | presentation for auto-generation (default: headless)
       --installer <name>              auto | bun | npm for auto-generation (default: auto)
       --input-root <path>             Input docs root for auto-generation
+      --update-docs                   Auto-run corpus update (pnpm corpus:pull) for default corpus root
       --numeric-tolerance <value>     Number comparison tolerance (default: 0.001)
       --max-diff-entries <n>          Max diff entries per doc (default: 2000)
       --visual-on-change              Run visual compare for changed docs after layout compare (default: on)
@@ -117,6 +121,7 @@ function parseArgs(argv) {
     pipeline: 'headless',
     installer: 'auto',
     inputRoot: null,
+    updateDocs: false,
     numericTolerance: 0.001,
     maxDiffEntries: 2000,
     visualOnChange: true,
@@ -211,6 +216,10 @@ function parseArgs(argv) {
     if (arg === '--input-root' && next) {
       args.inputRoot = next;
       i += 1;
+      continue;
+    }
+    if (arg === '--update-docs') {
+      args.updateDocs = true;
       continue;
     }
     if (arg === '--numeric-tolerance' && next) {
@@ -320,6 +329,83 @@ async function pathExists(targetPath) {
   } catch {
     return false;
   }
+}
+
+function canPromptUser() {
+  return Boolean(process.stdin.isTTY && process.stdout.isTTY && !process.env.CI);
+}
+
+async function promptYesNo(question, defaultValue = false) {
+  if (!canPromptUser()) return defaultValue;
+
+  const suffix = defaultValue ? ' [Y/n] ' : ' [y/N] ';
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  const ask = () => new Promise((resolve) => rl.question(`${question}${suffix}`, resolve));
+
+  try {
+    while (true) {
+      const raw = await ask();
+      const value = String(raw ?? '').trim().toLowerCase();
+      if (!value) return defaultValue;
+      if (value === 'y' || value === 'yes') return true;
+      if (value === 'n' || value === 'no') return false;
+      console.log('Please answer yes or no.');
+    }
+  } finally {
+    rl.close();
+  }
+}
+
+async function runCommand(command, commandArgs, options = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, commandArgs, {
+      cwd: options.cwd ?? process.cwd(),
+      env: options.env ?? process.env,
+      stdio: options.stdio ?? 'inherit',
+    });
+
+    child.on('error', reject);
+    child.on('close', (code) => resolve(code ?? 1));
+  });
+}
+
+async function runCorpusPull() {
+  const exitCode = await runCommand('pnpm', ['corpus:pull'], { cwd: REPO_ROOT });
+  if (exitCode !== 0) {
+    throw new Error(`Corpus pull failed with exit code ${exitCode}.`);
+  }
+}
+
+async function ensureDefaultCorpusReady(args) {
+  if (args.inputRoot) return;
+
+  const corpusRoot = DEFAULT_INPUT_ROOT;
+  const hasCorpus = await pathExists(corpusRoot);
+
+  if (!hasCorpus) {
+    console.log(`[layout-snapshots:compare] Corpus folder not found at ${corpusRoot}. Running pnpm corpus:pull...`);
+    await runCorpusPull();
+    if (!(await pathExists(corpusRoot))) {
+      throw new Error(`Corpus pull completed but folder not found: ${corpusRoot}`);
+    }
+    return;
+  }
+
+  if (args.updateDocs) {
+    console.log('[layout-snapshots:compare] Updating corpus folder via `pnpm corpus:pull` (--update-docs)...');
+    await runCorpusPull();
+    return;
+  }
+
+  const shouldUpdate = await promptYesNo('[layout-snapshots:compare] Update corpus folder?', false);
+  if (!shouldUpdate) return;
+
+  console.log('[layout-snapshots:compare] Updating corpus folder via `pnpm corpus:pull`...');
+  await runCorpusPull();
 }
 
 async function listSnapshotFiles(rootPath) {
@@ -744,6 +830,22 @@ function collectChangedDocRelativePaths(changedDocs) {
   return [...uniquePaths].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 }
 
+async function ensureVisualTestingDependencies(visualWorkdir) {
+  const nodeModulesPath = path.join(visualWorkdir, 'node_modules');
+  if (await pathExists(nodeModulesPath)) {
+    return;
+  }
+
+  console.log(
+    `[layout-snapshots:compare] Missing visual testing dependencies at ${nodeModulesPath}. Running pnpm install...`,
+  );
+
+  const exitCode = await runCommand('pnpm', ['install'], { cwd: visualWorkdir });
+  if (exitCode !== 0) {
+    throw new Error(`Visual dependency install failed with exit code ${exitCode}.`);
+  }
+}
+
 async function runVisualCompareForChangedDocs({ changedDocPaths, args }) {
   const visualWorkdir = path.resolve(args.visualWorkdir);
   const visualPackagePath = path.join(visualWorkdir, 'package.json');
@@ -755,6 +857,8 @@ async function runVisualCompareForChangedDocs({ changedDocPaths, args }) {
   if (!visualReference) {
     throw new Error('Visual compare requires --reference (or explicit --visual-reference).');
   }
+
+  await ensureVisualTestingDependencies(visualWorkdir);
 
   const visualDocsRoot = args.inputRoot ? path.resolve(args.inputRoot) : path.join(REPO_ROOT, 'test-corpus');
   const commandArgs = ['compare:visual', visualReference, '--local', '--docs', visualDocsRoot];
@@ -774,18 +878,12 @@ async function runVisualCompareForChangedDocs({ changedDocPaths, args }) {
   console.log(`[layout-snapshots:compare] Visual reference:  ${visualReference}`);
   console.log(`[layout-snapshots:compare] Visual docs count: ${changedDocPaths.length}`);
 
-  const child = spawn('pnpm', commandArgs, {
+  const exitCode = await runCommand('pnpm', commandArgs, {
     cwd: visualWorkdir,
     env: {
       ...process.env,
       ...(process.stdout.isTTY ? {} : { CI: process.env.CI ?? 'true' }),
     },
-    stdio: 'inherit',
-  });
-
-  const exitCode = await new Promise((resolve) => {
-    child.on('close', (code) => resolve(code ?? 1));
-    child.on('error', () => resolve(1));
   });
 
   if (exitCode !== 0) {
@@ -849,6 +947,7 @@ function buildReportMarkdown(summary) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  await ensureDefaultCorpusReady(args);
   const candidateRoot = path.resolve(args.candidateRoot);
   const referenceBase = path.resolve(args.referenceBase);
 
