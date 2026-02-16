@@ -145,12 +145,6 @@ Special thanks to these community members who have contributed code to SuperDoc:
 
 Want to see your avatar here? Check the [Contributing Guide](CONTRIBUTING.md) to get started.
 
-## Team
-
-<a href="https://github.com/superdoc-dev/superdoc/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=superdoc-dev/superdoc" />
-</a>
-
 ---
 
 Created and maintained by <a href="https://www.superdoc.dev" target="_blank">Harbour</a> and the SuperDoc community
