@@ -16,6 +16,7 @@ export default defineConfig({
       './packages/ai',
       './packages/collaboration-yjs',
       './packages/layout-engine/layout-bridge',
+      './packages/layout-engine/layout-engine',
       './packages/layout-engine/pm-adapter',
       './packages/layout-engine/tests',
       './shared/common',
