@@ -111,7 +111,7 @@ Starter projects to get you running quickly:
 
 ## Roadmap
 
-See the [SuperDoc roadmap](https://github.com/superdoc-dev/superdoc/wiki/%F0%9F%8E%AF%EF%B8%8F-SuperDoc-Roadmap) for what's coming next. DOCX import/export fidelity is always a top priority.
+See the [SuperDoc roadmap](https://github.com/superdoc-dev/superdoc/issues/1982) for what's coming next. DOCX import/export fidelity is always a top priority.
 
 ## Contributing
 
