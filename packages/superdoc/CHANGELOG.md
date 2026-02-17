@@ -1,3 +1,20 @@
+# [1.14.0](https://github.com/superdoc-dev/superdoc/compare/v1.13.1...v1.14.0) (2026-02-17)
+
+
+### Bug Fixes
+
+* **build:** remove dead vite-plugin-node-polyfills from UMD externals ([91de1fc](https://github.com/superdoc-dev/superdoc/commit/91de1fc2e47b0061d088db5d46b0da4cc07dc837))
+* **converter:** handle empty rPrChange run properties without dropping tracked-style runs ([c25d24d](https://github.com/superdoc-dev/superdoc/commit/c25d24d35534c39836c3251ee9baf1b908a6c78c))
+* correctly pass table info when deriving inline run properties (SD-1865) ([#2007](https://github.com/superdoc-dev/superdoc/issues/2007)) ([d752aff](https://github.com/superdoc-dev/superdoc/commit/d752afff9dc11041798ea2a28d487cc190e13383))
+* replace Node.js Buffer APIs with browser-native alternatives ([#2028](https://github.com/superdoc-dev/superdoc/issues/2028)) ([b17774a](https://github.com/superdoc-dev/superdoc/commit/b17774a566750c4cca084415f9b2c2b4c4386668)), closes [#exportProcessMediaFiles](https://github.com/superdoc-dev/superdoc/issues/exportProcessMediaFiles)
+* **tracked-changes:** colors should be restored when format rejected ([#1970](https://github.com/superdoc-dev/superdoc/issues/1970)) ([01ea504](https://github.com/superdoc-dev/superdoc/commit/01ea504737e38815c8ed7e5e585308ca5600e169))
+
+
+### Features
+
+* add pdf infra, migrate layers ([#2078](https://github.com/superdoc-dev/superdoc/issues/2078)) ([7d416e9](https://github.com/superdoc-dev/superdoc/commit/7d416e9b8d8bce2fbd914684a4d3e0f10ab5eff1))
+* layout snapshot testing ([#2035](https://github.com/superdoc-dev/superdoc/issues/2035)) ([b070cd7](https://github.com/superdoc-dev/superdoc/commit/b070cd79d376c528fdc4efdb3371c55a1a3cf908))
+
 ## [1.13.1](https://github.com/superdoc-dev/superdoc/compare/v1.13.0...v1.13.1) (2026-02-14)
 
 
