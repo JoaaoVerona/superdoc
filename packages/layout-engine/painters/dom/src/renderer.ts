@@ -68,6 +68,7 @@ import { DOM_CLASS_NAMES } from './constants.js';
 import { sanitizeHref, encodeTooltip } from '@superdoc/url-validation';
 import { renderTableFragment as renderTableFragmentElement } from './table/renderTableFragment.js';
 import { assertPmPositions, assertFragmentPmPositions } from './pm-position-validation.js';
+import { applyImageClipPath } from './utils/image-clip-path.js';
 import {
   applySdtContainerStyling,
   getSdtContainerKey,
@@ -2588,7 +2589,7 @@ export class DomPainter {
       const block = lookup.block as ImageBlock;
 
       const fragmentEl = this.doc.createElement('div');
-      fragmentEl.classList.add(CLASS_NAMES.fragment, 'superdoc-image-fragment');
+      fragmentEl.classList.add(CLASS_NAMES.fragment, DOM_CLASS_NAMES.IMAGE_FRAGMENT);
       applyStyles(fragmentEl, fragmentStyles);
       this.applyFragmentFrame(fragmentEl, fragment, context.section);
       fragmentEl.style.height = `${fragment.height}px`;
@@ -2632,11 +2633,9 @@ export class DomPainter {
       if (block.objectFit === 'cover') {
         img.style.objectPosition = 'left top';
       }
-      img.style.display = block.display === 'inline' ? 'inline-block' : 'block';
       const imageClipPath = resolveBlockClipPath(block);
-      if (imageClipPath) {
-        img.style.clipPath = imageClipPath;
-      }
+      applyImageClipPath(img, imageClipPath, { clipContainer: fragmentEl });
+      img.style.display = block.display === 'inline' ? 'inline-block' : 'block';
 
       // Apply VML image adjustments (gain/blacklevel) as CSS filters for watermark effects
       // conversion formulas calculated based on Libreoffice vml reader
@@ -2763,11 +2762,9 @@ export class DomPainter {
     if (drawing.objectFit === 'cover') {
       img.style.objectPosition = 'left top';
     }
-    img.style.display = 'block';
     const imageClipPath = resolveBlockClipPath(drawing);
-    if (imageClipPath) {
-      img.style.clipPath = imageClipPath;
-    }
+    applyImageClipPath(img, imageClipPath);
+    img.style.display = 'block';
     return img;
   }
 
@@ -3416,12 +3413,14 @@ export class DomPainter {
       const attrs = child.attrs as PositionedDrawingGeometry & {
         src: string;
         alt?: string;
+        clipPath?: string;
       };
       const img = this.doc!.createElement('img');
       img.src = attrs.src;
       img.alt = attrs.alt ?? '';
       img.style.objectFit = 'contain';
       img.style.display = 'block';
+      applyImageClipPath(img, attrs.clipPath);
       return img;
     }
     return this.createDrawingPlaceholder();
@@ -3904,9 +3903,11 @@ export class DomPainter {
       return null;
     }
 
+    const hasClipPath = typeof run.clipPath === 'string' && run.clipPath.trim().length > 0;
+
     // Create img element
     const img = this.doc.createElement('img');
-    img.classList.add('superdoc-inline-image');
+    img.classList.add(DOM_CLASS_NAMES.INLINE_IMAGE);
 
     // Set source - validate data URLs with strict format and size checks
     // Note: data: URLs are blocked by sanitizeUrl for hyperlinks (XSS risk),
@@ -3933,9 +3934,22 @@ export class DomPainter {
       }
     }
 
-    // Set dimensions
-    img.width = run.width;
-    img.height = run.height;
+    // Set dimensions: when we have clipPath we put img in a wrapper that has the layout size and overflow:hidden; img fills wrapper so cropped portion stays within after resize
+    if (!hasClipPath) {
+      img.width = run.width;
+      img.height = run.height;
+    } else {
+      Object.assign(img.style, {
+        width: '100%',
+        height: '100%',
+        maxWidth: '100%',
+        maxHeight: '100%',
+        boxSizing: 'border-box',
+        minWidth: '0',
+        minHeight: '0',
+      });
+    }
+    applyImageClipPath(img, run.clipPath);
 
     // Add metadata for interactive image resizing (inline images)
     // Only add metadata if dimensions are valid (positive, non-zero values)
@@ -3968,31 +3982,65 @@ export class DomPainter {
     // Apply inline-block display
     img.style.display = 'inline-block';
 
-    // Apply vertical alignment (bottom-aligned to text baseline)
-    img.style.verticalAlign = run.verticalAlign ?? 'bottom';
+    // When we use a wrapper (clipPath + positive dimensions), margins/verticalAlign/position/zIndex go on the wrapper only.
+    // When we don't use a wrapper (no clipPath, or clipPath with width/height 0), apply them on the img so layout is correct.
+    const useWrapper = hasClipPath && run.width > 0 && run.height > 0;
+    if (!useWrapper) {
+      // Apply vertical alignment (bottom-aligned to text baseline)
+      img.style.verticalAlign = run.verticalAlign ?? 'bottom';
 
-    // Apply spacing as CSS margins
-    if (run.distTop) {
-      img.style.marginTop = `${run.distTop}px`;
-    }
-    if (run.distBottom) {
-      img.style.marginBottom = `${run.distBottom}px`;
-    }
-    if (run.distLeft) {
-      img.style.marginLeft = `${run.distLeft}px`;
-    }
-    if (run.distRight) {
-      img.style.marginRight = `${run.distRight}px`;
-    }
+      // Apply spacing as CSS margins
+      if (run.distTop) {
+        img.style.marginTop = `${run.distTop}px`;
+      }
+      if (run.distBottom) {
+        img.style.marginBottom = `${run.distBottom}px`;
+      }
+      if (run.distLeft) {
+        img.style.marginLeft = `${run.distLeft}px`;
+      }
+      if (run.distRight) {
+        img.style.marginRight = `${run.distRight}px`;
+      }
 
-    // Position and z-index on the image only (not the line) so resize overlay can stack above.
-    img.style.position = 'relative';
-    img.style.zIndex = '1';
+      // Position and z-index on the image only (not the line) so resize overlay can stack above.
+      img.style.position = 'relative';
+      img.style.zIndex = '1';
+    }
 
     // Assert PM positions are present for cursor fallback
     assertPmPositions(run, 'inline image run');
 
-    // Apply PM position tracking for cursor placement
+    // When clipPath is set, scale makes the img paint outside its box;
+    // wrap in a clip container so only the cropped portion occupies space in the document.
+    // Wrapper size is the only layout box (position calculation uses run.width/run.height).
+    // PM position attributes go on the wrapper only so selection highlight and selection rects use the wrapper, not the scaled img.
+    // Skip wrapper when width or height is 0 (no layout box); img already has margins/verticalAlign/position/zIndex from above.
+    if (useWrapper) {
+      const wrapper = this.doc.createElement('span');
+      wrapper.classList.add(DOM_CLASS_NAMES.INLINE_IMAGE_CLIP_WRAPPER);
+      wrapper.style.display = 'inline-block';
+      wrapper.style.width = `${run.width}px`;
+      wrapper.style.height = `${run.height}px`;
+      wrapper.style.boxSizing = 'border-box';
+      wrapper.style.overflow = 'hidden';
+      wrapper.style.verticalAlign = run.verticalAlign ?? 'bottom';
+      if (run.distTop) wrapper.style.marginTop = `${run.distTop}px`;
+      if (run.distBottom) wrapper.style.marginBottom = `${run.distBottom}px`;
+      if (run.distLeft) wrapper.style.marginLeft = `${run.distLeft}px`;
+      if (run.distRight) wrapper.style.marginRight = `${run.distRight}px`;
+      wrapper.style.position = 'relative';
+      wrapper.style.zIndex = '1';
+      if (run.pmStart != null) wrapper.dataset.pmStart = String(run.pmStart);
+      if (run.pmEnd != null) wrapper.dataset.pmEnd = String(run.pmEnd);
+      wrapper.dataset.layoutEpoch = String(this.layoutEpoch);
+      this.applySdtDataset(wrapper, run.sdt);
+      if (run.dataAttrs) applyRunDataAttributes(wrapper, run.dataAttrs);
+      wrapper.appendChild(img);
+      return wrapper;
+    }
+
+    // Apply PM position tracking for cursor placement (only on img when not wrapped)
     if (run.pmStart != null) {
       img.dataset.pmStart = String(run.pmStart);
     }
@@ -5618,6 +5666,7 @@ const deriveBlockVersion = (block: FlowBlock): string => {
             imgRun.height,
             imgRun.alt ?? '',
             imgRun.title ?? '',
+            imgRun.clipPath ?? '',
             imgRun.distTop ?? '',
             imgRun.distBottom ?? '',
             imgRun.distLeft ?? '',
