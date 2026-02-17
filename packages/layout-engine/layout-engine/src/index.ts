@@ -725,7 +725,7 @@ export function layoutDocument(blocks: FlowBlock[], measures: Measure[], options
 
   // Track active and pending columns
   let activeColumns = options.columns ?? { count: 1, gap: 0 };
-  let pendingColumns: { count: number; gap: number } | null = null;
+  let pendingColumns: { count: number; gap: number; withSeparator?: boolean } | null = null;
 
   // Track active and pending orientation
   let activeOrientation: 'portrait' | 'landscape' | null = null;
@@ -822,11 +822,15 @@ export function layoutDocument(blocks: FlowBlock[], measures: Measure[], options
       // Update columns - if section has columns, use them; if undefined, reset to single column.
       // In OOXML, absence of <w:cols> means single column (default).
       if (block.columns) {
-        next.activeColumns = { count: block.columns.count, gap: block.columns.gap };
+        next.activeColumns = {
+          count: block.columns.count,
+          gap: block.columns.gap,
+          withSeparator: block.columns.withSeparator,
+        };
         next.pendingColumns = null;
       } else {
         // No columns specified = reset to single column (OOXML default)
-        next.activeColumns = { count: 1, gap: 0 };
+        next.activeColumns = { count: 1, gap: 0, withSeparator: false };
         next.pendingColumns = null;
       }
       // Schedule section refs for first section (will be applied on first page creation)
@@ -932,7 +936,9 @@ export function layoutDocument(blocks: FlowBlock[], measures: Measure[], options
     }
     // Helper to get column config: use block.columns if defined, otherwise reset to single column (OOXML default)
     const getColumnConfig = () =>
-      block.columns ? { count: block.columns.count, gap: block.columns.gap } : { count: 1, gap: 0 };
+      block.columns
+        ? { count: block.columns.count, gap: block.columns.gap, withSeparator: block.columns.withSeparator }
+        : { count: 1, gap: 0, withSeparator: false };
 
     if (block.attrs?.requirePageBoundary) {
       next.pendingColumns = getColumnConfig();
@@ -972,6 +978,11 @@ export function layoutDocument(blocks: FlowBlock[], measures: Measure[], options
     if (activeOrientation) {
       page.orientation = activeOrientation;
     }
+
+    if (activeColumns.count > 1) {
+      page.columns = { count: activeColumns.count, gap: activeColumns.gap, withSeparator: activeColumns.withSeparator };
+    }
+
     // Set vertical alignment from active section state
     if (activeVAlign && activeVAlign !== 'top') {
       page.vAlign = activeVAlign;
@@ -1307,7 +1318,10 @@ export function layoutDocument(blocks: FlowBlock[], measures: Measure[], options
   const advanceColumn = paginator.advanceColumn;
 
   // Start a new mid-page region with different column configuration
-  const startMidPageRegion = (state: PageState, newColumns: { count: number; gap: number }): void => {
+  const startMidPageRegion = (
+    state: PageState,
+    newColumns: { count: number; gap: number; withSeparator?: boolean },
+  ): void => {
     // Record the boundary at current Y position
     const boundary: ConstraintBoundary = {
       y: state.cursorY,
@@ -2279,7 +2293,10 @@ export function layoutDocument(blocks: FlowBlock[], measures: Measure[], options
     // after processing sections. Page/region-specific column changes are encoded
     // implicitly via fragment positions. Consumers should not assume this is
     // a static document-wide value.
-    columns: activeColumns.count > 1 ? { count: activeColumns.count, gap: activeColumns.gap } : undefined,
+    columns:
+      activeColumns.count > 1
+        ? { count: activeColumns.count, gap: activeColumns.gap, withSeparator: activeColumns.withSeparator }
+        : undefined,
   };
 }
 
@@ -2489,12 +2506,14 @@ function normalizeColumns(input: ColumnLayout | undefined, contentWidth: number)
   const gap = Math.max(0, input?.gap ?? 0);
   const totalGap = gap * (count - 1);
   const width = (contentWidth - totalGap) / count;
+  const withSeparator = input?.withSeparator ?? false;
 
   if (width <= COLUMN_EPSILON) {
     return {
       count: 1,
       gap: 0,
       width: contentWidth,
+      withSeparator,
     };
   }
 
@@ -2502,6 +2521,7 @@ function normalizeColumns(input: ColumnLayout | undefined, contentWidth: number)
     count,
     gap,
     width,
+    withSeparator,
   };
 }
 
