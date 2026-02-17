@@ -821,6 +821,7 @@ export type SectionBreakBlock = {
     count: number;
     gap: number;
     equalWidth?: boolean;
+    withSeparator?: boolean;
   };
   /**
    * Vertical alignment of content within the section's pages.
@@ -1295,6 +1296,7 @@ export type FlowBlock =
 export type ColumnLayout = {
   count: number;
   gap: number;
+  withSeparator?: boolean;
 };
 
 /** A measured line within a block, output by the measurer. */
@@ -1499,6 +1501,12 @@ export type Page = {
    * Sections are 0-indexed, matching the sectionIndex in SectionMetadata.
    */
   sectionIndex?: number;
+  /**
+   * Column layout configuration for this page.
+   * Used by the renderer to draw column separator lines when
+   * `withSeparator` is set to true.
+   */
+  columns?: ColumnLayout;
 };
 
 /** A paragraph fragment positioned on a page. */
