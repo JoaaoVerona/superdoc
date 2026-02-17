@@ -4,29 +4,48 @@ on:
   pull_request_target:
     types: [closed]
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to add contributor from'
+        required: true
+        type: number
 
 jobs:
   update-contributors:
-    if: github.event.pull_request.merged == true
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - name: Check if author is a bot
-        id: check-bot
-        run: |
-          AUTHOR="${{ github.event.pull_request.user.login }}"
-          if [[ "$AUTHOR" == *"[bot]"* ]]; then
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Generate token
-        if: steps.check-bot.outputs.skip == 'false'
         id: generate_token
         uses: actions/create-github-app-token@v2
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Resolve PR author
+        id: resolve
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            PR_NUMBER="${{ inputs.pr_number }}"
+            AUTHOR=$(gh api "repos/${{ github.repository }}/pulls/$PR_NUMBER" --jq '.user.login')
+          else
+            AUTHOR="${{ github.event.pull_request.user.login }}"
+          fi
+          echo "author=$AUTHOR" >> "$GITHUB_OUTPUT"
+
+      - name: Check if author is a bot
+        id: check-bot
+        run: |
+          if [[ "${{ steps.resolve.outputs.author }}" == *"[bot]"* ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Check if author should be excluded
         if: steps.check-bot.outputs.skip == 'false'
@@ -35,7 +54,7 @@ jobs:
           GH_TOKEN: ${{ steps.generate_token.outputs.token }}
           EXCLUDED_CONTRIBUTORS: ${{ vars.EXCLUDED_CONTRIBUTORS }}
         run: |
-          AUTHOR="${{ github.event.pull_request.user.login }}"
+          AUTHOR="${{ steps.resolve.outputs.author }}"
 
           # Check if author is in the exclusion list (comma-separated GitHub variable)
           if [[ -n "$EXCLUDED_CONTRIBUTORS" ]] && echo ",$EXCLUDED_CONTRIBUTORS," | grep -qi ",$AUTHOR,"; then
@@ -65,7 +84,7 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.generate_token.outputs.token }}
         run: |
-          AUTHOR="${{ github.event.pull_request.user.login }}"
+          AUTHOR="${{ steps.resolve.outputs.author }}"
 
           # Check if already in README
           if grep -q "github.com/$AUTHOR" README.md; then
