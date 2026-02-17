@@ -17,7 +17,7 @@
 </div>
 
 <p align="center">
-  <strong>A JavaScript library that renders and edits .docx files in the browser (and headless).</strong><br>
+  <strong>A JavaScript library that renders and edits DOCX files in the browser, headless server, and within agentic workflows.</strong><br>
   Tracked changes, complex tables, headers/footers, real-time collaboration — the features your users actually need.<br>
   Self-hosted. Open source. Works with React, Vue, and vanilla JS.
 </p>
