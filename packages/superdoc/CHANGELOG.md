@@ -1,3 +1,10 @@
+## [1.14.1](https://github.com/superdoc-dev/superdoc/compare/v1.14.0...v1.14.1) (2026-02-18)
+
+
+### Bug Fixes
+
+* table resizing regression ([#2091](https://github.com/superdoc-dev/superdoc/issues/2091)) ([20ed24e](https://github.com/superdoc-dev/superdoc/commit/20ed24ed2a6d080b5c90511f63f6fde66b358e83))
+
 # [1.14.0](https://github.com/superdoc-dev/superdoc/compare/v1.13.1...v1.14.0) (2026-02-17)
 
 
