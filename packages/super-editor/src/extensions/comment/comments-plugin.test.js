@@ -331,6 +331,33 @@ describe('CommentsPlugin commands', () => {
     expect(result).toBe(true);
   });
 
+  it('returns false (without throwing) when moveComment targets an out-of-bounds range', () => {
+    const schema = createCommentSchema();
+    const mark = schema.marks[CommentMarkName].create({ commentId: 'c-oob', internal: true });
+    const paragraph = schema.node('paragraph', null, [schema.text('Hello', [mark])]);
+    const doc = schema.node('doc', null, [paragraph]);
+    const { editor, commands, view } = createEditorEnvironment(schema, doc);
+
+    let currentState = editor.state;
+    const dispatch = vi.fn((tr) => {
+      currentState = currentState.apply(tr);
+      view.state = currentState;
+    });
+
+    const command = commands.moveComment({
+      commentId: 'c-oob',
+      from: doc.content.size + 5,
+      to: doc.content.size + 8,
+    });
+
+    let result;
+    expect(() => {
+      result = command({ tr: currentState.tr, dispatch, state: currentState, editor });
+    }).not.toThrow();
+    expect(result).toBe(false);
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
   it('focuses editor when moving the cursor to a comment by id', () => {
     const schema = createCommentSchema();
     const mark = schema.marks[CommentMarkName].create({ commentId: 'c-10', internal: true });

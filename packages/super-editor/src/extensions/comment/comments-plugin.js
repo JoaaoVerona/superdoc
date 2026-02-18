@@ -333,6 +333,7 @@ export const CommentsPlugin = Extension.create({
           if (from >= to) return false;
 
           const { doc } = state;
+          if (from < 0 || to > doc.content.size) return false;
           const resolved = findRangeById(doc, commentId);
           if (!resolved) return false;
 

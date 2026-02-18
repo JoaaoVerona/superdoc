@@ -87,12 +87,8 @@ export function executeTextSelector(
 
   const search = requireEditorCommand(editor.commands?.search, 'find (search)');
 
-  // Cap materialized matches to avoid memory pressure on high-frequency queries
-  // (e.g. single-character patterns). Pagination is applied after filtering.
-  const MAX_SEARCH_MATCHES = 1000;
   const rawResult = search(pattern, {
     highlight: false,
-    maxMatches: MAX_SEARCH_MATCHES,
     caseSensitive: selector.caseSensitive ?? false,
   });
 

@@ -687,7 +687,7 @@ describe('findAdapter — text selectors', () => {
     expect(capturedOptions!.caseSensitive).toBe(true);
   });
 
-  it('bounds maxMatches when pagination requests a small page', () => {
+  it('does not cap maxMatches so pagination and scoping see the full result set', () => {
     let capturedOptions: Record<string, unknown> | undefined;
     const doc = buildDoc({ typeName: 'paragraph', attrs: { sdBlockId: 'p1' }, nodeSize: 50, offset: 0 });
     const search: SearchFn = (_pattern, options) => {
@@ -700,8 +700,7 @@ describe('findAdapter — text selectors', () => {
     findAdapter(editor, query);
 
     expect(capturedOptions).toBeDefined();
-    expect(typeof capturedOptions!.maxMatches).toBe('number');
-    expect(capturedOptions!.maxMatches as number).toBeLessThanOrEqual(1000);
+    expect(capturedOptions!.maxMatches).toBeUndefined();
   });
 
   it('throws when editor has no search command', () => {
@@ -754,6 +753,70 @@ describe('findAdapter — text selectors', () => {
 
     expect(result.matches).toHaveLength(2);
     expect(result.total).toBe(5); // must be 5, not 2
+  });
+
+  it('supports paginating text results past the first 1000 matches', () => {
+    const totalMatches = 1205;
+    const allMatches = Array.from({ length: totalMatches }, (_, index) => ({
+      from: 8,
+      to: 9,
+      text: `m-${index}`,
+    }));
+    const doc = buildDoc(
+      'a'.repeat(102),
+      { typeName: 'paragraph', attrs: { sdBlockId: 'p1' }, nodeSize: 50, offset: 0 },
+      { typeName: 'paragraph', attrs: { sdBlockId: 'p2' }, nodeSize: 50, offset: 52 },
+    );
+    const search: SearchFn = (_pattern, options) => {
+      const max = (options as { maxMatches?: number })?.maxMatches ?? Infinity;
+      return allMatches.slice(0, max);
+    };
+    const editor = makeEditor(doc, search);
+    const query: Query = {
+      select: { type: 'text', pattern: 'test' },
+      offset: 1001,
+      limit: 2,
+    };
+
+    const result = findAdapter(editor, query);
+
+    expect(result.total).toBe(totalMatches);
+    expect(result.matches).toHaveLength(2);
+  });
+
+  it('applies within filtering to the full text match set (not only the first 1000)', () => {
+    const outsideScopeMatches = Array.from({ length: 1000 }, (_, index) => ({
+      from: 92,
+      to: 93,
+      text: `outside-${index}`,
+    }));
+    const insideScopeMatches = [
+      { from: 8, to: 9, text: 'inside-1' },
+      { from: 10, to: 11, text: 'inside-2' },
+    ];
+    const allMatches = [...outsideScopeMatches, ...insideScopeMatches];
+
+    const doc = buildDoc(
+      'a'.repeat(140),
+      { typeName: 'table', attrs: { sdBlockId: 'tbl1' }, nodeSize: 80, offset: 0 },
+      { typeName: 'paragraph', attrs: { sdBlockId: 'p-in' }, nodeSize: 20, offset: 5 },
+      { typeName: 'paragraph', attrs: { sdBlockId: 'p-out' }, nodeSize: 20, offset: 90 },
+    );
+    const search: SearchFn = (_pattern, options) => {
+      const max = (options as { maxMatches?: number })?.maxMatches ?? Infinity;
+      return allMatches.slice(0, max);
+    };
+    const editor = makeEditor(doc, search);
+    const query: Query = {
+      select: { type: 'text', pattern: 'test' },
+      within: { kind: 'block', nodeType: 'table', nodeId: 'tbl1' },
+    };
+
+    const result = findAdapter(editor, query);
+
+    expect(result.total).toBe(2);
+    expect(result.matches).toHaveLength(2);
+    expect(result.matches.every((match) => match.nodeId === 'p-in')).toBe(true);
   });
 
   it('filters text matches by within scope', () => {
