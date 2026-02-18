@@ -63,9 +63,9 @@ jobs:
             exit 0
           fi
 
-          # Check if author is an org member
-          if gh api "orgs/superdoc-dev/members/$AUTHOR" --silent 2>/dev/null; then
-            echo "$AUTHOR is an org member"
+          # Check if author is a repo collaborator (team member)
+          if gh api "repos/${{ github.repository }}/collaborators/$AUTHOR" --silent 2>/dev/null; then
+            echo "$AUTHOR is a repo collaborator"
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
