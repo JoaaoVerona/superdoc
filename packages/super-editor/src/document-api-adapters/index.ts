@@ -14,9 +14,14 @@ import type {
 import type { Editor } from '../core/Editor.js';
 import { getDocumentApiCapabilities } from './capabilities-adapter.js';
 import { createCommentsAdapter } from './comments-adapter.js';
-import { createParagraphAdapter } from './create-adapter.js';
+import { createParagraphAdapter, createHeadingAdapter } from './create-adapter.js';
 import { findAdapter } from './find-adapter.js';
-import { formatBoldAdapter } from './format-adapter.js';
+import {
+  formatBoldAdapter,
+  formatItalicAdapter,
+  formatUnderlineAdapter,
+  formatStrikethroughAdapter,
+} from './format-adapter.js';
 import { getNodeAdapter, getNodeByIdAdapter } from './get-node-adapter.js';
 import { getTextAdapter } from './get-text-adapter.js';
 import { infoAdapter } from './info-adapter.js';
@@ -71,6 +76,9 @@ export function getDocumentApiAdapters(editor: Editor): DocumentApiAdapters {
     },
     format: {
       bold: (input, options) => formatBoldAdapter(editor, input, options),
+      italic: (input, options) => formatItalicAdapter(editor, input, options),
+      underline: (input, options) => formatUnderlineAdapter(editor, input, options),
+      strikethrough: (input, options) => formatStrikethroughAdapter(editor, input, options),
     },
     trackChanges: {
       list: (query) => trackChangesListAdapter(editor, query),
@@ -82,6 +90,7 @@ export function getDocumentApiAdapters(editor: Editor): DocumentApiAdapters {
     },
     create: {
       paragraph: (input, options) => createParagraphAdapter(editor, input, options),
+      heading: (input, options) => createHeadingAdapter(editor, input, options),
     },
     lists: {
       list: (query) => listsListAdapter(editor, query),

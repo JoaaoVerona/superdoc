@@ -7,7 +7,12 @@ import { infoAdapter } from './info-adapter.js';
 import { getDocumentApiCapabilities } from './capabilities-adapter.js';
 import { createCommentsAdapter } from './comments-adapter.js';
 import { writeAdapter } from './write-adapter.js';
-import { formatBoldAdapter } from './format-adapter.js';
+import {
+  formatBoldAdapter,
+  formatItalicAdapter,
+  formatUnderlineAdapter,
+  formatStrikethroughAdapter,
+} from './format-adapter.js';
 import {
   trackChangesListAdapter,
   trackChangesGetAdapter,
@@ -16,7 +21,7 @@ import {
   trackChangesAcceptAllAdapter,
   trackChangesRejectAllAdapter,
 } from './track-changes-adapter.js';
-import { createParagraphAdapter } from './create-adapter.js';
+import { createParagraphAdapter, createHeadingAdapter } from './create-adapter.js';
 import {
   listsListAdapter,
   listsGetAdapter,
@@ -58,6 +63,9 @@ export function assembleDocumentApiAdapters(editor: Editor): DocumentApiAdapters
     },
     format: {
       bold: (input, options) => formatBoldAdapter(editor, input, options),
+      italic: (input, options) => formatItalicAdapter(editor, input, options),
+      underline: (input, options) => formatUnderlineAdapter(editor, input, options),
+      strikethrough: (input, options) => formatStrikethroughAdapter(editor, input, options),
     },
     trackChanges: {
       list: (input) => trackChangesListAdapter(editor, input),
@@ -69,6 +77,7 @@ export function assembleDocumentApiAdapters(editor: Editor): DocumentApiAdapters
     },
     create: {
       paragraph: (input, options) => createParagraphAdapter(editor, input, options),
+      heading: (input, options) => createHeadingAdapter(editor, input, options),
     },
     lists: {
       list: (query) => listsListAdapter(editor, query),

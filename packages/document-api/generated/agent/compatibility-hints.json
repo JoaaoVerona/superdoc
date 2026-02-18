@@ -109,6 +109,15 @@
       "supportsDryRun": false,
       "supportsTrackedMode": false
     },
+    "create.heading": {
+      "deterministicTargetResolution": true,
+      "memberPath": "create.heading",
+      "mutates": true,
+      "postApplyThrowForbidden": true,
+      "requiresPreflightCapabilitiesCheck": true,
+      "supportsDryRun": true,
+      "supportsTrackedMode": true
+    },
     "create.paragraph": {
       "deterministicTargetResolution": true,
       "memberPath": "create.paragraph",
@@ -139,6 +148,33 @@
     "format.bold": {
       "deterministicTargetResolution": true,
       "memberPath": "format.bold",
+      "mutates": true,
+      "postApplyThrowForbidden": true,
+      "requiresPreflightCapabilitiesCheck": true,
+      "supportsDryRun": true,
+      "supportsTrackedMode": true
+    },
+    "format.italic": {
+      "deterministicTargetResolution": true,
+      "memberPath": "format.italic",
+      "mutates": true,
+      "postApplyThrowForbidden": true,
+      "requiresPreflightCapabilitiesCheck": true,
+      "supportsDryRun": true,
+      "supportsTrackedMode": true
+    },
+    "format.strikethrough": {
+      "deterministicTargetResolution": true,
+      "memberPath": "format.strikethrough",
+      "mutates": true,
+      "postApplyThrowForbidden": true,
+      "requiresPreflightCapabilitiesCheck": true,
+      "supportsDryRun": true,
+      "supportsTrackedMode": true
+    },
+    "format.underline": {
+      "deterministicTargetResolution": true,
+      "memberPath": "format.underline",
       "mutates": true,
       "postApplyThrowForbidden": true,
       "requiresPreflightCapabilitiesCheck": true,
@@ -326,5 +362,5 @@
       "supportsTrackedMode": false
     }
   },
-  "sourceHash": "8d875ceb279d213c1e779882f103d39fa2106545ce94c6b1553ae06b6c321e03"
+  "sourceHash": "3e7edc551feb80b42bfa59f928a0ce1f34ecb7cf71952d5a489107089105d543"
 }

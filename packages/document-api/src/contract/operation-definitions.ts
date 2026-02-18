@@ -204,6 +204,42 @@ export const OPERATION_DEFINITIONS = {
     referenceDocPath: 'format/bold.mdx',
     referenceGroup: 'format',
   },
+  'format.italic': {
+    memberPath: 'format.italic',
+    metadata: mutationOperation({
+      idempotency: 'conditional',
+      supportsDryRun: true,
+      supportsTrackedMode: true,
+      possibleFailureCodes: ['INVALID_TARGET'],
+      throws: T_NOT_FOUND_COMMAND_TRACKED,
+    }),
+    referenceDocPath: 'format/italic.mdx',
+    referenceGroup: 'format',
+  },
+  'format.underline': {
+    memberPath: 'format.underline',
+    metadata: mutationOperation({
+      idempotency: 'conditional',
+      supportsDryRun: true,
+      supportsTrackedMode: true,
+      possibleFailureCodes: ['INVALID_TARGET'],
+      throws: T_NOT_FOUND_COMMAND_TRACKED,
+    }),
+    referenceDocPath: 'format/underline.mdx',
+    referenceGroup: 'format',
+  },
+  'format.strikethrough': {
+    memberPath: 'format.strikethrough',
+    metadata: mutationOperation({
+      idempotency: 'conditional',
+      supportsDryRun: true,
+      supportsTrackedMode: true,
+      possibleFailureCodes: ['INVALID_TARGET'],
+      throws: T_NOT_FOUND_COMMAND_TRACKED,
+    }),
+    referenceDocPath: 'format/strikethrough.mdx',
+    referenceGroup: 'format',
+  },
 
   'create.paragraph': {
     memberPath: 'create.paragraph',
@@ -215,6 +251,18 @@ export const OPERATION_DEFINITIONS = {
       throws: T_NOT_FOUND_COMMAND_TRACKED,
     }),
     referenceDocPath: 'create/paragraph.mdx',
+    referenceGroup: 'create',
+  },
+  'create.heading': {
+    memberPath: 'create.heading',
+    metadata: mutationOperation({
+      idempotency: 'non-idempotent',
+      supportsDryRun: true,
+      supportsTrackedMode: true,
+      possibleFailureCodes: ['INVALID_TARGET'],
+      throws: T_NOT_FOUND_COMMAND_TRACKED,
+    }),
+    referenceDocPath: 'create/heading.mdx',
     referenceGroup: 'create',
   },
 

@@ -16,6 +16,7 @@ type EditorCommandName = string;
 // Read-only operations (find, getNode, getText, info, etc.) similarly need no commands.
 const REQUIRED_COMMANDS: Partial<Record<OperationId, readonly EditorCommandName[]>> = {
   'create.paragraph': ['insertParagraphAt'],
+  'create.heading': ['insertHeadingAt'],
   'lists.insert': ['insertListItemAt'],
   'lists.setType': ['setListTypeAt'],
   'lists.indent': ['setTextSelection', 'increaseListIndent'],
@@ -50,9 +51,17 @@ function hasAllCommands(editor: Editor, operationId: OperationId): boolean {
   return required.every((command) => hasCommand(editor, command));
 }
 
-function hasBoldCapability(editor: Editor): boolean {
-  return Boolean(editor.schema?.marks?.bold);
+function hasMarkCapability(editor: Editor, markName: string): boolean {
+  return Boolean(editor.schema?.marks?.[markName]);
 }
+
+/** Map from format operation IDs to their editor mark names. */
+const FORMAT_MARK_MAP: Partial<Record<OperationId, string>> = {
+  'format.bold': 'bold',
+  'format.italic': 'italic',
+  'format.underline': 'underline',
+  'format.strikethrough': 'strike',
+};
 
 function hasTrackedModeCapability(editor: Editor, operationId: OperationId): boolean {
   if (!hasCommand(editor, 'insertTrackedChange')) return false;
@@ -60,7 +69,7 @@ function hasTrackedModeCapability(editor: Editor, operationId: OperationId): boo
   // report tracked mode as unavailable when no user is configured so capability-
   // gated clients don't offer tracked actions that would deterministically fail.
   if (!editor.options?.user) return false;
-  if (operationId === 'format.bold') {
+  if (FORMAT_MARK_MAP[operationId]) {
     return Boolean(editor.schema?.marks?.[TrackFormatMarkName]);
   }
   return true;
@@ -98,15 +107,16 @@ function pushReason(reasons: CapabilityReasonCode[], reason: CapabilityReasonCod
 }
 
 function isOperationAvailable(editor: Editor, operationId: OperationId): boolean {
-  if (operationId === 'format.bold') {
-    return hasBoldCapability(editor);
+  const markName = FORMAT_MARK_MAP[operationId];
+  if (markName) {
+    return hasMarkCapability(editor, markName);
   }
 
   return hasAllCommands(editor, operationId);
 }
 
 function isCommandBackedAvailability(operationId: OperationId): boolean {
-  return operationId !== 'format.bold';
+  return !FORMAT_MARK_MAP[operationId];
 }
 
 function buildOperationCapabilities(editor: Editor): DocumentApiCapabilities['operations'] {

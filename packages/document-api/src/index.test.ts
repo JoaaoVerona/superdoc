@@ -109,16 +109,23 @@ function makeWriteAdapter(): WriteAdapter {
   };
 }
 
+function makeFormatReceipt() {
+  return {
+    success: true as const,
+    resolution: {
+      target: { kind: 'text' as const, blockId: 'p1', range: { start: 0, end: 2 } },
+      range: { from: 1, to: 3 },
+      text: 'Hi',
+    },
+  };
+}
+
 function makeFormatAdapter(): FormatAdapter {
   return {
-    bold: vi.fn(() => ({
-      success: true as const,
-      resolution: {
-        target: { kind: 'text' as const, blockId: 'p1', range: { start: 0, end: 2 } },
-        range: { from: 1, to: 3 },
-        text: 'Hi',
-      },
-    })),
+    bold: vi.fn(() => makeFormatReceipt()),
+    italic: vi.fn(() => makeFormatReceipt()),
+    underline: vi.fn(() => makeFormatReceipt()),
+    strikethrough: vi.fn(() => makeFormatReceipt()),
   };
 }
 
@@ -143,6 +150,11 @@ function makeCreateAdapter(): CreateAdapter {
       success: true as const,
       paragraph: { kind: 'block' as const, nodeType: 'paragraph' as const, nodeId: 'new-p' },
       insertionPoint: { kind: 'text' as const, blockId: 'new-p', range: { start: 0, end: 0 } },
+    })),
+    heading: vi.fn(() => ({
+      success: true as const,
+      heading: { kind: 'block' as const, nodeType: 'heading' as const, nodeId: 'new-h' },
+      insertionPoint: { kind: 'text' as const, blockId: 'new-h', range: { start: 0, end: 0 } },
     })),
   };
 }
@@ -495,6 +507,66 @@ describe('createDocumentApi', () => {
     expect(formatAdpt.bold).toHaveBeenCalledWith({ target }, { changeMode: 'tracked', dryRun: false });
   });
 
+  it('delegates format.italic to the format adapter', () => {
+    const formatAdpt = makeFormatAdapter();
+    const api = createDocumentApi({
+      find: makeFindAdapter(QUERY_RESULT),
+      getNode: makeGetNodeAdapter(PARAGRAPH_INFO),
+      getText: makeGetTextAdapter(),
+      info: makeInfoAdapter(),
+      comments: makeCommentsAdapter(),
+      write: makeWriteAdapter(),
+      format: formatAdpt,
+      trackChanges: makeTrackChangesAdapter(),
+      create: makeCreateAdapter(),
+      lists: makeListsAdapter(),
+    });
+
+    const target = { kind: 'text', blockId: 'p1', range: { start: 0, end: 2 } } as const;
+    api.format.italic({ target }, { changeMode: 'direct' });
+    expect(formatAdpt.italic).toHaveBeenCalledWith({ target }, { changeMode: 'direct', dryRun: false });
+  });
+
+  it('delegates format.underline to the format adapter', () => {
+    const formatAdpt = makeFormatAdapter();
+    const api = createDocumentApi({
+      find: makeFindAdapter(QUERY_RESULT),
+      getNode: makeGetNodeAdapter(PARAGRAPH_INFO),
+      getText: makeGetTextAdapter(),
+      info: makeInfoAdapter(),
+      comments: makeCommentsAdapter(),
+      write: makeWriteAdapter(),
+      format: formatAdpt,
+      trackChanges: makeTrackChangesAdapter(),
+      create: makeCreateAdapter(),
+      lists: makeListsAdapter(),
+    });
+
+    const target = { kind: 'text', blockId: 'p1', range: { start: 0, end: 2 } } as const;
+    api.format.underline({ target }, { changeMode: 'direct' });
+    expect(formatAdpt.underline).toHaveBeenCalledWith({ target }, { changeMode: 'direct', dryRun: false });
+  });
+
+  it('delegates format.strikethrough to the format adapter', () => {
+    const formatAdpt = makeFormatAdapter();
+    const api = createDocumentApi({
+      find: makeFindAdapter(QUERY_RESULT),
+      getNode: makeGetNodeAdapter(PARAGRAPH_INFO),
+      getText: makeGetTextAdapter(),
+      info: makeInfoAdapter(),
+      comments: makeCommentsAdapter(),
+      write: makeWriteAdapter(),
+      format: formatAdpt,
+      trackChanges: makeTrackChangesAdapter(),
+      create: makeCreateAdapter(),
+      lists: makeListsAdapter(),
+    });
+
+    const target = { kind: 'text', blockId: 'p1', range: { start: 0, end: 2 } } as const;
+    api.format.strikethrough({ target }, { changeMode: 'tracked' });
+    expect(formatAdpt.strikethrough).toHaveBeenCalledWith({ target }, { changeMode: 'tracked', dryRun: false });
+  });
+
   it('delegates trackChanges namespace operations', () => {
     const trackAdpt = makeTrackChangesAdapter();
     const api = createDocumentApi({
@@ -555,6 +627,41 @@ describe('createDocumentApi', () => {
       {
         at: { kind: 'documentEnd' },
         text: 'Created paragraph',
+      },
+      { changeMode: 'tracked', dryRun: false },
+    );
+  });
+
+  it('delegates create.heading to the create adapter', () => {
+    const createAdpt = makeCreateAdapter();
+    const api = createDocumentApi({
+      find: makeFindAdapter(QUERY_RESULT),
+      getNode: makeGetNodeAdapter(PARAGRAPH_INFO),
+      getText: makeGetTextAdapter(),
+      info: makeInfoAdapter(),
+      comments: makeCommentsAdapter(),
+      write: makeWriteAdapter(),
+      format: makeFormatAdapter(),
+      trackChanges: makeTrackChangesAdapter(),
+      create: createAdpt,
+      lists: makeListsAdapter(),
+    });
+
+    const result = api.create.heading(
+      {
+        level: 2,
+        at: { kind: 'documentEnd' },
+        text: 'Created heading',
+      },
+      { changeMode: 'tracked' },
+    );
+
+    expect(result.success).toBe(true);
+    expect(createAdpt.heading).toHaveBeenCalledWith(
+      {
+        level: 2,
+        at: { kind: 'documentEnd' },
+        text: 'Created heading',
       },
       { changeMode: 'tracked', dryRun: false },
     );

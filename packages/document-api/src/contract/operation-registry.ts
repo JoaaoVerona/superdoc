@@ -11,7 +11,12 @@ import type { OperationId } from './types.js';
 import type { NodeAddress, NodeInfo, QueryResult, Selector, Query } from '../types/index.js';
 import type { TextMutationReceipt, Receipt } from '../types/receipt.js';
 import type { DocumentInfo } from '../types/info.types.js';
-import type { CreateParagraphInput, CreateParagraphResult } from '../types/create.types.js';
+import type {
+  CreateParagraphInput,
+  CreateParagraphResult,
+  CreateHeadingInput,
+  CreateHeadingResult,
+} from '../types/create.types.js';
 
 import type { FindOptions } from '../find/find.js';
 import type { GetNodeByIdInput } from '../get-node/get-node.js';
@@ -21,7 +26,12 @@ import type { InsertInput } from '../insert/insert.js';
 import type { ReplaceInput } from '../replace/replace.js';
 import type { DeleteInput } from '../delete/delete.js';
 import type { MutationOptions } from '../write/write.js';
-import type { FormatBoldInput } from '../format/format.js';
+import type {
+  FormatBoldInput,
+  FormatItalicInput,
+  FormatUnderlineInput,
+  FormatStrikethroughInput,
+} from '../format/format.js';
 import type {
   AddCommentInput,
   EditCommentInput,
@@ -73,9 +83,13 @@ export interface OperationRegistry {
 
   // --- format.* ---
   'format.bold': { input: FormatBoldInput; options: MutationOptions; output: TextMutationReceipt };
+  'format.italic': { input: FormatItalicInput; options: MutationOptions; output: TextMutationReceipt };
+  'format.underline': { input: FormatUnderlineInput; options: MutationOptions; output: TextMutationReceipt };
+  'format.strikethrough': { input: FormatStrikethroughInput; options: MutationOptions; output: TextMutationReceipt };
 
   // --- create.* ---
   'create.paragraph': { input: CreateParagraphInput; options: MutationOptions; output: CreateParagraphResult };
+  'create.heading': { input: CreateHeadingInput; options: MutationOptions; output: CreateHeadingResult };
 
   // --- lists.* ---
   'lists.list': { input: ListsListQuery | undefined; options: never; output: ListsListResult };

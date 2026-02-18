@@ -15,8 +15,13 @@ import {
 } from '../../extensions/track-changes/constants.js';
 import { ListHelpers } from '../../core/helpers/list-numbering-helpers.js';
 import { createCommentsAdapter } from '../comments-adapter.js';
-import { createParagraphAdapter } from '../create-adapter.js';
-import { formatBoldAdapter } from '../format-adapter.js';
+import { createParagraphAdapter, createHeadingAdapter } from '../create-adapter.js';
+import {
+  formatBoldAdapter,
+  formatItalicAdapter,
+  formatUnderlineAdapter,
+  formatStrikethroughAdapter,
+} from '../format-adapter.js';
 import { getDocumentApiCapabilities } from '../capabilities-adapter.js';
 import {
   listsExitAdapter,
@@ -169,6 +174,7 @@ function makeTextEditor(
     acceptAllTrackedChanges: vi.fn(() => true),
     rejectAllTrackedChanges: vi.fn(() => true),
     insertParagraphAt: vi.fn(() => true),
+    insertHeadingAt: vi.fn(() => true),
     insertListItemAt: vi.fn(() => true),
     setListTypeAt: vi.fn(() => true),
     increaseListIndent: vi.fn(() => true),
@@ -181,6 +187,15 @@ function makeTextEditor(
     marks: {
       bold: {
         create: vi.fn(() => ({ type: 'bold' })),
+      },
+      italic: {
+        create: vi.fn(() => ({ type: 'italic' })),
+      },
+      underline: {
+        create: vi.fn(() => ({ type: 'underline' })),
+      },
+      strike: {
+        create: vi.fn(() => ({ type: 'strike' })),
       },
       [TrackFormatMarkName]: {
         create: vi.fn(() => ({ type: TrackFormatMarkName })),
@@ -202,6 +217,7 @@ function makeTextEditor(
     },
     can: vi.fn(() => ({
       insertParagraphAt: vi.fn(() => true),
+      insertHeadingAt: vi.fn(() => true),
       insertListItemAt: vi.fn(() => true),
       setListTypeAt: vi.fn(() => true),
       increaseListIndent: vi.fn(() => true),
@@ -498,6 +514,84 @@ const mutationVectors: Partial<Record<OperationId, MutationVector>> = {
       );
     },
   },
+  'format.italic': {
+    throwCase: () => {
+      const { editor } = makeTextEditor();
+      return formatItalicAdapter(
+        editor,
+        { target: { kind: 'text', blockId: 'missing', range: { start: 0, end: 1 } } },
+        { changeMode: 'direct' },
+      );
+    },
+    failureCase: () => {
+      const { editor } = makeTextEditor();
+      return formatItalicAdapter(
+        editor,
+        { target: { kind: 'text', blockId: 'p1', range: { start: 2, end: 2 } } },
+        { changeMode: 'direct' },
+      );
+    },
+    applyCase: () => {
+      const { editor } = makeTextEditor();
+      return formatItalicAdapter(
+        editor,
+        { target: { kind: 'text', blockId: 'p1', range: { start: 0, end: 5 } } },
+        { changeMode: 'direct' },
+      );
+    },
+  },
+  'format.underline': {
+    throwCase: () => {
+      const { editor } = makeTextEditor();
+      return formatUnderlineAdapter(
+        editor,
+        { target: { kind: 'text', blockId: 'missing', range: { start: 0, end: 1 } } },
+        { changeMode: 'direct' },
+      );
+    },
+    failureCase: () => {
+      const { editor } = makeTextEditor();
+      return formatUnderlineAdapter(
+        editor,
+        { target: { kind: 'text', blockId: 'p1', range: { start: 2, end: 2 } } },
+        { changeMode: 'direct' },
+      );
+    },
+    applyCase: () => {
+      const { editor } = makeTextEditor();
+      return formatUnderlineAdapter(
+        editor,
+        { target: { kind: 'text', blockId: 'p1', range: { start: 0, end: 5 } } },
+        { changeMode: 'direct' },
+      );
+    },
+  },
+  'format.strikethrough': {
+    throwCase: () => {
+      const { editor } = makeTextEditor();
+      return formatStrikethroughAdapter(
+        editor,
+        { target: { kind: 'text', blockId: 'missing', range: { start: 0, end: 1 } } },
+        { changeMode: 'direct' },
+      );
+    },
+    failureCase: () => {
+      const { editor } = makeTextEditor();
+      return formatStrikethroughAdapter(
+        editor,
+        { target: { kind: 'text', blockId: 'p1', range: { start: 2, end: 2 } } },
+        { changeMode: 'direct' },
+      );
+    },
+    applyCase: () => {
+      const { editor } = makeTextEditor();
+      return formatStrikethroughAdapter(
+        editor,
+        { target: { kind: 'text', blockId: 'p1', range: { start: 0, end: 5 } } },
+        { changeMode: 'direct' },
+      );
+    },
+  },
   'create.paragraph': {
     throwCase: () => {
       const { editor } = makeTextEditor('Hello', { commands: { insertParagraphAt: undefined } });
@@ -510,6 +604,32 @@ const mutationVectors: Partial<Record<OperationId, MutationVector>> = {
     applyCase: () => {
       const { editor } = makeTextEditor('Hello', { commands: { insertParagraphAt: vi.fn(() => true) } });
       return createParagraphAdapter(editor, { at: { kind: 'documentEnd' }, text: 'X' }, { changeMode: 'direct' });
+    },
+  },
+  'create.heading': {
+    throwCase: () => {
+      const { editor } = makeTextEditor('Hello', { commands: { insertHeadingAt: undefined } });
+      return createHeadingAdapter(
+        editor,
+        { level: 1, at: { kind: 'documentEnd' }, text: 'X' },
+        { changeMode: 'direct' },
+      );
+    },
+    failureCase: () => {
+      const { editor } = makeTextEditor('Hello', { commands: { insertHeadingAt: vi.fn(() => false) } });
+      return createHeadingAdapter(
+        editor,
+        { level: 1, at: { kind: 'documentEnd' }, text: 'X' },
+        { changeMode: 'direct' },
+      );
+    },
+    applyCase: () => {
+      const { editor } = makeTextEditor('Hello', { commands: { insertHeadingAt: vi.fn(() => true) } });
+      return createHeadingAdapter(
+        editor,
+        { level: 2, at: { kind: 'documentEnd' }, text: 'X' },
+        { changeMode: 'direct' },
+      );
     },
   },
   'lists.insert': {
@@ -917,6 +1037,39 @@ const dryRunVectors: Partial<Record<OperationId, () => unknown>> = {
     expect(tr.addMark).not.toHaveBeenCalled();
     return result;
   },
+  'format.italic': () => {
+    const { editor, dispatch, tr } = makeTextEditor();
+    const result = formatItalicAdapter(
+      editor,
+      { target: { kind: 'text', blockId: 'p1', range: { start: 0, end: 5 } } },
+      { changeMode: 'direct', dryRun: true },
+    );
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(tr.addMark).not.toHaveBeenCalled();
+    return result;
+  },
+  'format.underline': () => {
+    const { editor, dispatch, tr } = makeTextEditor();
+    const result = formatUnderlineAdapter(
+      editor,
+      { target: { kind: 'text', blockId: 'p1', range: { start: 0, end: 5 } } },
+      { changeMode: 'direct', dryRun: true },
+    );
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(tr.addMark).not.toHaveBeenCalled();
+    return result;
+  },
+  'format.strikethrough': () => {
+    const { editor, dispatch, tr } = makeTextEditor();
+    const result = formatStrikethroughAdapter(
+      editor,
+      { target: { kind: 'text', blockId: 'p1', range: { start: 0, end: 5 } } },
+      { changeMode: 'direct', dryRun: true },
+    );
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(tr.addMark).not.toHaveBeenCalled();
+    return result;
+  },
   'create.paragraph': () => {
     const insertParagraphAt = vi.fn(() => true);
     const { editor } = makeTextEditor('Hello', { commands: { insertParagraphAt } });
@@ -926,6 +1079,17 @@ const dryRunVectors: Partial<Record<OperationId, () => unknown>> = {
       { changeMode: 'direct', dryRun: true },
     );
     expect(insertParagraphAt).not.toHaveBeenCalled();
+    return result;
+  },
+  'create.heading': () => {
+    const insertHeadingAt = vi.fn(() => true);
+    const { editor } = makeTextEditor('Hello', { commands: { insertHeadingAt } });
+    const result = createHeadingAdapter(
+      editor,
+      { level: 1, at: { kind: 'documentEnd' }, text: 'Dry run heading' },
+      { changeMode: 'direct', dryRun: true },
+    );
+    expect(insertHeadingAt).not.toHaveBeenCalled();
     return result;
   },
   'lists.insert': () => {

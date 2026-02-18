@@ -66,15 +66,19 @@ function makeAdapters() {
       },
     })),
   };
+  const formatReceipt = () => ({
+    success: true as const,
+    resolution: {
+      target: { kind: 'text' as const, blockId: 'p1', range: { start: 0, end: 2 } },
+      range: { from: 1, to: 3 },
+      text: 'Hi',
+    },
+  });
   const formatAdapter: FormatAdapter = {
-    bold: vi.fn(() => ({
-      success: true as const,
-      resolution: {
-        target: { kind: 'text' as const, blockId: 'p1', range: { start: 0, end: 2 } },
-        range: { from: 1, to: 3 },
-        text: 'Hi',
-      },
-    })),
+    bold: vi.fn(formatReceipt),
+    italic: vi.fn(formatReceipt),
+    underline: vi.fn(formatReceipt),
+    strikethrough: vi.fn(formatReceipt),
   };
   const trackChangesAdapter: TrackChangesAdapter = {
     list: vi.fn(() => ({ matches: [], total: 0 })),
@@ -93,6 +97,11 @@ function makeAdapters() {
       success: true as const,
       paragraph: { kind: 'block' as const, nodeType: 'paragraph' as const, nodeId: 'new-p' },
       insertionPoint: { kind: 'text' as const, blockId: 'new-p', range: { start: 0, end: 0 } },
+    })),
+    heading: vi.fn(() => ({
+      success: true as const,
+      heading: { kind: 'block' as const, nodeType: 'heading' as const, nodeId: 'new-h' },
+      insertionPoint: { kind: 'text' as const, blockId: 'new-h', range: { start: 0, end: 0 } },
     })),
   };
   const listsAdapter: ListsAdapter = {
@@ -227,6 +236,42 @@ describe('invoke', () => {
       const input = { address: { kind: 'block' as const, nodeType: 'listItem' as const, nodeId: 'li-1' } };
       const direct = api.lists.get(input);
       const invoked = api.invoke({ operationId: 'lists.get', input });
+      expect(invoked).toEqual(direct);
+    });
+
+    it('format.italic: invoke returns same result as direct call', () => {
+      const { adapters } = makeAdapters();
+      const api = createDocumentApi(adapters);
+      const input = { target: { kind: 'text' as const, blockId: 'p1', range: { start: 0, end: 2 } } };
+      const direct = api.format.italic(input);
+      const invoked = api.invoke({ operationId: 'format.italic', input });
+      expect(invoked).toEqual(direct);
+    });
+
+    it('format.underline: invoke returns same result as direct call', () => {
+      const { adapters } = makeAdapters();
+      const api = createDocumentApi(adapters);
+      const input = { target: { kind: 'text' as const, blockId: 'p1', range: { start: 0, end: 2 } } };
+      const direct = api.format.underline(input);
+      const invoked = api.invoke({ operationId: 'format.underline', input });
+      expect(invoked).toEqual(direct);
+    });
+
+    it('format.strikethrough: invoke returns same result as direct call', () => {
+      const { adapters } = makeAdapters();
+      const api = createDocumentApi(adapters);
+      const input = { target: { kind: 'text' as const, blockId: 'p1', range: { start: 0, end: 2 } } };
+      const direct = api.format.strikethrough(input);
+      const invoked = api.invoke({ operationId: 'format.strikethrough', input });
+      expect(invoked).toEqual(direct);
+    });
+
+    it('create.heading: invoke returns same result as direct call', () => {
+      const { adapters } = makeAdapters();
+      const api = createDocumentApi(adapters);
+      const input = { level: 1 as const, at: { kind: 'documentEnd' as const }, text: 'Title' };
+      const direct = api.create.heading(input);
+      const invoked = api.invoke({ operationId: 'create.heading', input });
       expect(invoked).toEqual(direct);
     });
   });
