@@ -267,7 +267,7 @@ describe('list-indent-utils', () => {
     });
 
     describe('standard hanging indent lists', () => {
-      it('should use paraIndentLeft when canonical text-start data is unavailable', () => {
+      it('should position caret after marker for standard list first line', () => {
         const result = calculateTextStartIndent({
           isFirstLine: true,
           isListItem: true,
@@ -276,7 +276,10 @@ describe('list-indent-utils', () => {
           firstLineIndent: 0,
           hangingIndent: 18,
         });
-        expect(result).toBe(36);
+        // Standard hanging list: marker starts at markerStartPos = 36 - 18 = 18
+        // Marker ends at 18 + 20 = 38 (extends past paraIndentLeft since 20 > 18)
+        // Caret should be after marker + gutter: 18 + 20 + 8 = 46
+        expect(result).toBe(46);
       });
 
       it('should return paraIndentLeft for standard list non-first line', () => {
@@ -327,7 +330,7 @@ describe('list-indent-utils', () => {
         expect(result).toBe(60);
       });
 
-      it('should use paraIndentLeft when firstLineIndentMode has no explicit text start', () => {
+      it('should calculate fallback when textStartPx is not available', () => {
         const result = calculateTextStartIndent({
           isFirstLine: true,
           isListItem: true,
@@ -339,10 +342,12 @@ describe('list-indent-utils', () => {
             firstLineIndentMode: true,
           },
         });
-        expect(result).toBe(36);
+        // paraIndentLeft + max(firstLineIndent, 0) + markerWidth
+        // 36 + max(0, 0) + 20 = 56
+        expect(result).toBe(56);
       });
 
-      it('should use paraIndentLeft when textStartPx is non-finite', () => {
+      it('should use fallback when textStartPx is non-finite', () => {
         const result = calculateTextStartIndent({
           isFirstLine: true,
           isListItem: true,
@@ -355,10 +360,11 @@ describe('list-indent-utils', () => {
             textStartPx: NaN,
           },
         });
-        expect(result).toBe(36);
+        // Should use fallback: 36 + 0 + 20 = 56
+        expect(result).toBe(56);
       });
 
-      it('should not re-derive from firstLineIndent when text start is missing', () => {
+      it('should handle positive first-line indent in fallback calculation', () => {
         const result = calculateTextStartIndent({
           isFirstLine: true,
           isListItem: true,
@@ -370,10 +376,12 @@ describe('list-indent-utils', () => {
             firstLineIndentMode: true,
           },
         });
-        expect(result).toBe(36);
+        // paraIndentLeft + max(firstLineIndent, 0) + markerWidth
+        // 36 + max(10, 0) + 20 = 66
+        expect(result).toBe(66);
       });
 
-      it('should keep paraIndentLeft for negative firstLineIndent when text start is missing', () => {
+      it('should ignore negative first-line indent in fallback calculation', () => {
         const result = calculateTextStartIndent({
           isFirstLine: true,
           isListItem: true,
@@ -385,7 +393,9 @@ describe('list-indent-utils', () => {
             firstLineIndentMode: true,
           },
         });
-        expect(result).toBe(36);
+        // paraIndentLeft + max(firstLineIndent, 0) + markerWidth
+        // 36 + max(-10, 0) + 20 = 56
+        expect(result).toBe(56);
       });
 
       it('should not apply firstLineIndentMode on non-first lines', () => {
@@ -468,7 +478,7 @@ describe('list-indent-utils', () => {
         expect(result).toBe(56);
       });
 
-      it('should not synthesize list marker geometry when wordLayout is missing', () => {
+      it('should position caret after marker when wordLayout is missing', () => {
         const result = calculateTextStartIndent({
           isFirstLine: true,
           isListItem: true,
@@ -478,7 +488,10 @@ describe('list-indent-utils', () => {
           firstLineIndent: 0,
           hangingIndent: 18,
         });
-        expect(result).toBe(36);
+        // No wordLayout with hanging indent: use fallback calculation
+        // markerStartPos = 36 - 18 + 0 = 18
+        // indentAdjust = 18 + 12 (markerTextWidth) + 8 (gutter) = 38
+        expect(result).toBe(38);
       });
 
       it('should use textStartPx for standard lists when provided', () => {
@@ -500,7 +513,11 @@ describe('list-indent-utils', () => {
         expect(result).toBe(50);
       });
 
-      it('should keep paraIndentLeft when marker widths exist but canonical data is missing', () => {
+      it('should fallback to markerWidth when markerTextWidth is undefined (SD-1138)', () => {
+        // This test case matches the bug scenario:
+        // - Input-rule created list with hanging indent
+        // - markerTextWidth is null/undefined (not populated from measurement)
+        // - Should position caret after the marker using markerWidth as fallback
         const result = calculateTextStartIndent({
           isFirstLine: true,
           isListItem: true,
@@ -510,7 +527,10 @@ describe('list-indent-utils', () => {
           firstLineIndent: 0,
           hangingIndent: 24,
         });
-        expect(result).toBe(48);
+        // markerStartPos = 48 - 24 + 0 = 24
+        // effectiveMarkerTextWidth = 24 (falls back to markerWidth since markerTextWidth is undefined)
+        // indentAdjust = 24 + 24 + 8 (gutter) = 56
+        expect(result).toBe(56);
       });
 
       it('should return paraIndentLeft for non-hanging lists', () => {

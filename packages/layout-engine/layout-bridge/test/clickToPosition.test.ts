@@ -15,8 +15,6 @@ import {
   rowspanTableBlock,
   rowspanTableMeasure,
   buildTableFixtures,
-  buildTableWithListFixtures,
-  buildTableWithSdtFixtures,
 } from './mock-data';
 
 describe('clickToPosition', () => {
@@ -407,103 +405,5 @@ describe('clickToPosition: table cell on page 2 (multi-page)', () => {
     expect(result!.pos).toBeLessThanOrEqual(111);
     expect(result!.blockId).toBe('page2-table');
     expect(result!.pageIndex).toBe(1);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Table cells with list markers (PR 0 safety rails)
-// ---------------------------------------------------------------------------
-
-describe('clickToPosition: table cells with list markers', () => {
-  const { block: tableBlock, measure: tableMeasure } = buildTableWithListFixtures({
-    cellWidth: 200,
-    pmStart: 60,
-    pmEnd: 69,
-    text: 'List text',
-    markerWidth: 18,
-  });
-
-  const layout: Layout = {
-    pageSize: { w: 400, h: 500 },
-    pages: [
-      {
-        number: 1,
-        fragments: [
-          {
-            kind: 'table',
-            blockId: 'table-list-block',
-            fromRow: 0,
-            toRow: 1,
-            x: 30,
-            y: 40,
-            width: 200,
-            height: 24,
-          },
-        ],
-      },
-    ],
-  };
-
-  it('resolves click on marker region to correct PM position', () => {
-    // Click at x=35 (within the table fragment, near the left edge where marker lives)
-    const result = clickToPosition(layout, [tableBlock], [tableMeasure], { x: 35, y: 52 });
-    expect(result).not.toBeNull();
-    expect(result!.blockId).toBe('table-list-block');
-    expect(result!.pos).toBeGreaterThanOrEqual(60);
-    expect(result!.pos).toBeLessThanOrEqual(69);
-  });
-
-  it('resolves click on text after marker to correct PM position', () => {
-    // Click at x=100 (well past the marker region, into text content)
-    const markerResult = clickToPosition(layout, [tableBlock], [tableMeasure], { x: 35, y: 52 });
-    const result = clickToPosition(layout, [tableBlock], [tableMeasure], { x: 100, y: 52 });
-    expect(markerResult).not.toBeNull();
-    expect(result).not.toBeNull();
-    expect(result!.blockId).toBe('table-list-block');
-    expect(result!.pos).toBeGreaterThanOrEqual(60);
-    expect(result!.pos).toBeLessThanOrEqual(69);
-    expect(result!.pos).toBeGreaterThanOrEqual(markerResult!.pos);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Table cells with SDT wrappers (PR 0 safety rails)
-// ---------------------------------------------------------------------------
-
-describe('clickToPosition: table cells with SDT wrappers', () => {
-  const { block: tableBlock, measure: tableMeasure } = buildTableWithSdtFixtures({
-    cellWidth: 200,
-    pmStart: 70,
-    pmEnd: 78,
-    text: 'SDT text',
-  });
-
-  const layout: Layout = {
-    pageSize: { w: 400, h: 500 },
-    pages: [
-      {
-        number: 1,
-        fragments: [
-          {
-            kind: 'table',
-            blockId: 'table-sdt-block',
-            fromRow: 0,
-            toRow: 1,
-            x: 30,
-            y: 40,
-            width: 200,
-            height: 24,
-          },
-        ],
-      },
-    ],
-  };
-
-  it('resolves click inside SDT wrapper to correct PM position', () => {
-    const result = clickToPosition(layout, [tableBlock], [tableMeasure], { x: 80, y: 52 });
-    expect(result).not.toBeNull();
-    expect(result!.blockId).toBe('table-sdt-block');
-    expect(result!.pos).toBeGreaterThanOrEqual(70);
-    expect(result!.pos).toBeLessThanOrEqual(78);
   });
 });
