@@ -56,6 +56,9 @@ import { ProseMirrorRenderer } from './renderers/ProseMirrorRenderer.js';
 import { BLANK_DOCX_DATA_URI } from './blank-docx.js';
 import { getArrayBufferFromUrl } from '@core/super-converter/helpers.js';
 import { Telemetry, COMMUNITY_LICENSE_KEY } from '@superdoc/common';
+import type { DocumentApi } from '@superdoc/document-api';
+import { createDocumentApi } from '@superdoc/document-api';
+import { getDocumentApiAdapters } from '../document-api-adapters/index.js';
 
 declare const __APP_VERSION__: string;
 declare const version: string | undefined;
@@ -202,6 +205,11 @@ export class Editor extends EventEmitter<EditorEventMap> {
    * Tracks the current phase of the editor's document lifecycle.
    */
   #editorLifecycleState: EditorLifecycleState = 'initialized';
+
+  /**
+   * Document API instance (lazy-initialized).
+   */
+  #documentApi: DocumentApi | null = null;
 
   /**
    * Source path of the currently opened document.
@@ -1218,6 +1226,31 @@ export class Editor extends EventEmitter<EditorEventMap> {
    */
   get commands(): EditorCommands {
     return this.#commandService?.commands;
+  }
+
+  /**
+   * Programmatic document API for querying and mutating the document.
+   *
+   * Lazily creates a {@link DocumentApi} backed by the editor's adapter graph.
+   * The instance is cached for the current document session and
+   * invalidated on {@link close} so a fresh adapter set is created on reopen.
+   *
+   * @throws {InvalidStateError} If the editor is not in `ready` or `saving` state.
+   *
+   * @example
+   * ```ts
+   * const result = editor.doc.find({ nodeType: 'paragraph' });
+   *
+   * // Fetch node info for the first match
+   * const info = editor.doc.getNode(result.matches[0]);
+   * ```
+   */
+  get doc(): DocumentApi {
+    this.#assertState('ready', 'saving');
+    if (!this.#documentApi) {
+      this.#documentApi = createDocumentApi(getDocumentApiAdapters(this));
+    }
+    return this.#documentApi;
   }
 
   /**
@@ -2852,6 +2885,7 @@ export class Editor extends EventEmitter<EditorEventMap> {
     this.#assertState('ready');
     this.emit('documentClose', { editor: this });
     this.#unloadDocument();
+    this.#documentApi = null;
     this.#editorLifecycleState = 'closed';
   }
 
@@ -3036,6 +3070,7 @@ export class Editor extends EventEmitter<EditorEventMap> {
     this.extensionService = undefined!;
     this.schema = undefined!;
     this.#commandService = undefined!;
+    this.#documentApi = null;
 
     this.#editorLifecycleState = 'destroyed';
   }
