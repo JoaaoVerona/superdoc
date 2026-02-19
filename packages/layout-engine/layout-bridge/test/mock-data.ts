@@ -426,6 +426,9 @@ export const rowspanTableLayout: Layout = {
 /**
  * Builds table test fixtures with customizable dimensions.
  * Reduces duplication between clickToPosition and dom-mapping table tests.
+ *
+ * @param opts - Optional table geometry and PM range overrides for the fixture.
+ * @returns A table `FlowBlock` and matching `Measure` used by click-mapping tests.
  */
 export function buildTableFixtures(
   opts: {
@@ -506,6 +509,199 @@ export function buildTableFixtures(
     columnWidths: [cellWidth],
     totalWidth: cellWidth,
     totalHeight: cellHeight,
+  };
+
+  return { block, measure };
+}
+
+/**
+ * Builds table fixtures where the cell contains a list paragraph (wordLayout marker).
+ * Exercises the DOM shape that changes during PRs 5–6 (shared flow migration).
+ *
+ * @param opts - Optional marker, cell geometry, and PM range overrides for the fixture.
+ * @returns A table `FlowBlock` and matching `Measure` with list-marker paragraph data.
+ */
+export function buildTableWithListFixtures(
+  opts: {
+    markerText?: string;
+    markerWidth?: number;
+    cellWidth?: number;
+    pmStart?: number;
+    pmEnd?: number;
+    text?: string;
+    blockId?: string;
+  } = {},
+): { block: FlowBlock; measure: Measure } {
+  const {
+    markerText = '1.',
+    markerWidth = 18,
+    cellWidth = 200,
+    pmStart = 50,
+    pmEnd = 59,
+    text = 'List text',
+    blockId = 'table-list-block',
+  } = opts;
+
+  const block: FlowBlock = {
+    kind: 'table',
+    id: blockId,
+    rows: [
+      {
+        id: 'row-0',
+        cells: [
+          {
+            id: 'cell-0',
+            blocks: [
+              {
+                kind: 'paragraph' as const,
+                id: `${blockId}-para`,
+                runs: [{ text, fontFamily: 'Arial', fontSize: 14, pmStart, pmEnd }],
+                attrs: {
+                  wordLayout: {
+                    marker: {
+                      markerText,
+                      justification: 'right',
+                      suffix: 'tab' as const,
+                      run: { fontFamily: 'Arial', fontSize: 14, bold: false, italic: false },
+                    },
+                    gutter: { widthPx: markerWidth },
+                  },
+                  indent: { left: 36, hanging: markerWidth },
+                },
+              },
+            ],
+            attrs: { padding: { top: 2, bottom: 2, left: 4, right: 4 } },
+          },
+        ],
+      },
+    ],
+  };
+
+  const measure: Measure = {
+    kind: 'table',
+    rows: [
+      {
+        height: 24,
+        cells: [
+          {
+            width: cellWidth,
+            height: 24,
+            gridColumnStart: 0,
+            blocks: [
+              {
+                kind: 'paragraph',
+                lines: [
+                  {
+                    fromRun: 0,
+                    fromChar: 0,
+                    toRun: 0,
+                    toChar: text.length,
+                    width: 70,
+                    ascent: 10,
+                    descent: 4,
+                    lineHeight: 18,
+                  },
+                ],
+                totalHeight: 18,
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    columnWidths: [cellWidth],
+    totalWidth: cellWidth,
+    totalHeight: 24,
+  };
+
+  return { block, measure };
+}
+
+/**
+ * Builds table fixtures where the cell contains an SDT-wrapped paragraph.
+ * Exercises the DOM shape for SDT-inside-table-cell mapping.
+ *
+ * @param opts - Optional cell geometry and PM range overrides for the SDT fixture.
+ * @returns A table `FlowBlock` and matching `Measure` with SDT inline run data.
+ */
+export function buildTableWithSdtFixtures(
+  opts: {
+    cellWidth?: number;
+    pmStart?: number;
+    pmEnd?: number;
+    text?: string;
+    blockId?: string;
+  } = {},
+): { block: FlowBlock; measure: Measure } {
+  const { cellWidth = 200, pmStart = 50, pmEnd = 59, text = 'SDT text', blockId = 'table-sdt-block' } = opts;
+
+  const block: FlowBlock = {
+    kind: 'table',
+    id: blockId,
+    rows: [
+      {
+        id: 'row-0',
+        cells: [
+          {
+            id: 'cell-0',
+            blocks: [
+              {
+                kind: 'paragraph' as const,
+                id: `${blockId}-para`,
+                runs: [
+                  {
+                    text,
+                    fontFamily: 'Arial',
+                    fontSize: 14,
+                    pmStart,
+                    pmEnd,
+                    sdt: { id: 'sdt-1', tag: 'field', alias: 'Field' },
+                  },
+                ],
+              },
+            ],
+            attrs: { padding: { top: 2, bottom: 2, left: 4, right: 4 } },
+          },
+        ],
+      },
+    ],
+  };
+
+  const measure: Measure = {
+    kind: 'table',
+    rows: [
+      {
+        height: 24,
+        cells: [
+          {
+            width: cellWidth,
+            height: 24,
+            gridColumnStart: 0,
+            blocks: [
+              {
+                kind: 'paragraph',
+                lines: [
+                  {
+                    fromRun: 0,
+                    fromChar: 0,
+                    toRun: 0,
+                    toChar: text.length,
+                    width: 60,
+                    ascent: 10,
+                    descent: 4,
+                    lineHeight: 18,
+                  },
+                ],
+                totalHeight: 18,
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    columnWidths: [cellWidth],
+    totalWidth: cellWidth,
+    totalHeight: 24,
   };
 
   return { block, measure };
