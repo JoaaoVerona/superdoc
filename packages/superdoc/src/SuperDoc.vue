@@ -291,7 +291,15 @@ const onEditorUpdate = ({ editor }) => {
   proxy.$superdoc.emit('editor-update', { editor });
 };
 
-const onEditorSelectionChange = ({ editor, transaction }) => {
+let selectionUpdateRafId = null;
+const onEditorSelectionChange = ({ editor }) => {
+  // Always cancel any pending RAF first — a queued callback from a previous
+  // call could fire after mode switches and repopulate stale selection state.
+  if (selectionUpdateRafId != null) {
+    cancelAnimationFrame(selectionUpdateRafId);
+    selectionUpdateRafId = null;
+  }
+
   if (skipSelectionUpdate.value) {
     // When comment is added selection will be equal to comment text
     // Should skip calculations to keep text selection for comments correct
@@ -307,6 +315,25 @@ const onEditorSelectionChange = ({ editor, transaction }) => {
     return;
   }
 
+  // Defer selection-related Vue reactive updates to the next animation frame.
+  // Without this, each PM transaction synchronously mutates reactive refs (selectionPosition,
+  // activeSelection, toolsMenuPosition), which triggers Vue's flushJobs microtask to re-evaluate
+  // hundreds of components — blocking the main thread for ~300ms per keystroke.
+  // RAF batches this work with the layout pipeline rerender, keeping typing responsive.
+  // Note: we capture only `editor` (not `transaction`) — by the time RAF fires,
+  // ProseMirror may have processed more keystrokes, making the transaction stale.
+  // processSelectionChange already reads editor.state.selection as the primary source.
+  selectionUpdateRafId = requestAnimationFrame(() => {
+    selectionUpdateRafId = null;
+    if (isViewingMode()) {
+      resetSelection();
+      return;
+    }
+    processSelectionChange(editor);
+  });
+};
+
+const processSelectionChange = (editor, transaction) => {
   const { documentId } = editor.options;
   const txnSelection = transaction?.selection;
   const stateSelection = editor.state?.selection ?? editor.view?.state?.selection;
@@ -487,7 +514,14 @@ const editorOptions = (doc) => {
     annotations: proxy.$superdoc.config.annotations,
     isCommentsEnabled: Boolean(commentsModuleConfig.value),
     isAiEnabled: proxy.$superdoc.config.modules?.ai,
-    slashMenuConfig: proxy.$superdoc.config.modules?.slashMenu,
+    contextMenuConfig: (() => {
+      if (proxy.$superdoc.config.modules?.slashMenu && !proxy.$superdoc.config.modules?.contextMenu) {
+        console.warn('[SuperDoc] modules.slashMenu is deprecated. Use modules.contextMenu instead.');
+      }
+      return proxy.$superdoc.config.modules?.contextMenu ?? proxy.$superdoc.config.modules?.slashMenu;
+    })(),
+    /** @deprecated Use contextMenuConfig instead */
+    slashMenuConfig: proxy.$superdoc.config.modules?.contextMenu ?? proxy.$superdoc.config.modules?.slashMenu,
     comments: {
       highlightColors: commentsModuleConfig.value?.highlightColors,
       highlightOpacity: commentsModuleConfig.value?.highlightOpacity,
@@ -689,6 +723,10 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.removeEventListener('mousedown', handleDocumentMouseDown);
+  if (selectionUpdateRafId != null) {
+    cancelAnimationFrame(selectionUpdateRafId);
+    selectionUpdateRafId = null;
+  }
 });
 
 const selectionLayer = ref(null);

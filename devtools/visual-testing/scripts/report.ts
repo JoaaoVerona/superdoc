@@ -966,6 +966,11 @@ export function writeHtmlReport(
         const sourceLocalPath = typeof sourceDoc?.localPath === 'string' ? sourceDoc.localPath : '';
         const sourceRelativePath = typeof sourceDoc?.relativePath === 'string' ? sourceDoc.relativePath : '';
         const hasLocalSource = Boolean(sourceLocalPath);
+        const preloadedPages = Array.isArray(sourceDoc?.wordOverlayPages)
+          && sourceDoc.wordOverlayPages.length > 0
+          ? sourceDoc.wordOverlayPages
+          : null;
+        const canShowOverlay = hasLocalSource || Boolean(preloadedPages);
 
         const state = {
           enabled: false,
@@ -1103,8 +1108,8 @@ export function writeHtmlReport(
             button.textContent = 'Show Word Overlay';
           }
 
-          button.disabled = !hasLocalSource || state.isLoading;
-          if (!hasLocalSource) {
+          button.disabled = !canShowOverlay || state.isLoading;
+          if (!canShowOverlay) {
             button.title = 'Doc not available locally.';
           } else if (state.enabled) {
             button.title = 'Hide the Word overlay on baseline and actual views.';
@@ -1126,6 +1131,16 @@ export function writeHtmlReport(
         }
 
         async function captureWordReference() {
+          if (preloadedPages) {
+            state.pages = preloadedPages;
+            state.enabled = true;
+            state.status = 'Loaded ' + state.pages.length + ' Word page(s) from R2.';
+            applyOverlayToAllPages();
+            renderButton();
+            renderControls();
+            return;
+          }
+
           state.isLoading = true;
           state.error = '';
           state.status = 'Generating Word reference...';
