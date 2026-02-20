@@ -103,6 +103,9 @@ jobs:
       # ---------------------------------------------------------------
       # Python SDK
       # ---------------------------------------------------------------
+      - name: Build superdoc package for CLI native bundling
+        run: pnpm --prefix packages/superdoc run build:es
+
       - name: Build CLI platform artifacts (for Python SDK)
         run: |
           pnpm --prefix apps/cli run build:native:all
@@ -122,33 +125,7 @@ jobs:
         working-directory: packages/sdk/langs/python
 
       - name: Verify embedded CLI binaries in Python wheel
-        run: |
-          python - <<'PY'
-          import glob
-          import zipfile
-
-          wheels = glob.glob("packages/sdk/langs/python/dist/*.whl")
-          if not wheels:
-            raise SystemExit("No wheel found in packages/sdk/langs/python/dist/")
-
-          wheel = wheels[0]
-          expected = [
-            "superdoc/_vendor/cli/darwin-arm64/superdoc",
-            "superdoc/_vendor/cli/darwin-x64/superdoc",
-            "superdoc/_vendor/cli/linux-x64/superdoc",
-            "superdoc/_vendor/cli/linux-arm64/superdoc",
-            "superdoc/_vendor/cli/windows-x64/superdoc.exe",
-          ]
-
-          with zipfile.ZipFile(wheel) as archive:
-            names = set(archive.namelist())
-
-          missing = [name for name in expected if name not in names]
-          if missing:
-            raise SystemExit(f"Wheel is missing embedded CLI binaries: {missing}")
-
-          print(f"Verified embedded CLI binaries in {wheel}")
-          PY
+        run: node packages/sdk/scripts/verify-python-wheel-embedded-cli.mjs
 
       - name: Publish Python SDK to PyPI
         if: ${{ !inputs.dry-run }}

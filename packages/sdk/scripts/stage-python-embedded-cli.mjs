@@ -3,6 +3,7 @@
 import { access, chmod, copyFile, mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { PYTHON_EMBEDDED_CLI_TARGETS } from './python-embedded-cli-targets.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,14 +12,6 @@ const REPO_ROOT = path.resolve(__dirname, '../../../');
 const CLI_PLATFORMS_ROOT = path.join(REPO_ROOT, 'apps/cli/platforms');
 const PYTHON_VENDOR_ROOT = path.join(REPO_ROOT, 'packages/sdk/langs/python/superdoc/_vendor');
 const PYTHON_VENDOR_CLI_ROOT = path.join(PYTHON_VENDOR_ROOT, 'cli');
-
-const TARGETS = [
-  { id: 'darwin-arm64', sourcePackage: 'cli-darwin-arm64', binaryName: 'superdoc' },
-  { id: 'darwin-x64', sourcePackage: 'cli-darwin-x64', binaryName: 'superdoc' },
-  { id: 'linux-x64', sourcePackage: 'cli-linux-x64', binaryName: 'superdoc' },
-  { id: 'linux-arm64', sourcePackage: 'cli-linux-arm64', binaryName: 'superdoc' },
-  { id: 'windows-x64', sourcePackage: 'cli-windows-x64', binaryName: 'superdoc.exe' },
-];
 
 async function fileExists(filePath) {
   try {
@@ -36,8 +29,8 @@ async function ensureInitFile(filePath) {
   }
 }
 
-async function stageTargetBinary(target) {
-  const sourcePath = path.join(CLI_PLATFORMS_ROOT, target.sourcePackage, 'bin', target.binaryName);
+export async function stageTargetBinary(target, { cliPlatformsRoot = CLI_PLATFORMS_ROOT, pythonVendorCliRoot = PYTHON_VENDOR_CLI_ROOT } = {}) {
+  const sourcePath = path.join(cliPlatformsRoot, target.sourcePackage, 'bin', target.binaryName);
   if (!(await fileExists(sourcePath))) {
     throw new Error(
       `Missing CLI binary for ${target.id}: ${sourcePath}\n` +
@@ -45,7 +38,7 @@ async function stageTargetBinary(target) {
     );
   }
 
-  const targetDir = path.join(PYTHON_VENDOR_CLI_ROOT, target.id);
+  const targetDir = path.join(pythonVendorCliRoot, target.id);
   await rm(targetDir, { recursive: true, force: true });
   await mkdir(targetDir, { recursive: true });
 
@@ -63,18 +56,29 @@ async function stageTargetBinary(target) {
   console.log(`Staged ${target.id}: ${path.relative(REPO_ROOT, destinationPath)}`);
 }
 
-async function main() {
-  await ensureInitFile(path.join(PYTHON_VENDOR_ROOT, '__init__.py'));
-  await ensureInitFile(path.join(PYTHON_VENDOR_CLI_ROOT, '__init__.py'));
+export async function stagePythonEmbeddedCli({
+  targets = PYTHON_EMBEDDED_CLI_TARGETS,
+  cliPlatformsRoot = CLI_PLATFORMS_ROOT,
+  pythonVendorRoot = PYTHON_VENDOR_ROOT,
+  pythonVendorCliRoot = PYTHON_VENDOR_CLI_ROOT,
+} = {}) {
+  await ensureInitFile(path.join(pythonVendorRoot, '__init__.py'));
+  await ensureInitFile(path.join(pythonVendorCliRoot, '__init__.py'));
 
-  for (const target of TARGETS) {
-    await stageTargetBinary(target);
+  for (const target of targets) {
+    await stageTargetBinary(target, { cliPlatformsRoot, pythonVendorCliRoot });
   }
 
-  console.log(`Staged ${TARGETS.length} platform binaries for Python SDK.`);
+  console.log(`Staged ${targets.length} platform binaries for Python SDK.`);
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error);
-  process.exitCode = 1;
-});
+async function main() {
+  await stagePythonEmbeddedCli();
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exitCode = 1;
+  });
+}

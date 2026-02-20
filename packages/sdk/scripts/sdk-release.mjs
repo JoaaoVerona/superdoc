@@ -5,6 +5,7 @@ import { mkdir, rm, cp, symlink, lstat } from 'node:fs/promises';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
+import { pythonEmbeddedCliTargetIds } from './python-embedded-cli-targets.mjs';
 
 const execFileAsync = promisify(execFile);
 
@@ -12,14 +13,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, '../../../');
 const CLI_APP_DIR = path.join(REPO_ROOT, 'apps/cli');
+const SUPERDOC_PACKAGE_DIR = path.join(REPO_ROOT, 'packages/superdoc');
 const NODE_SDK_DIR = path.join(REPO_ROOT, 'packages/sdk/langs/node');
 const PYTHON_SDK_DIR = path.join(REPO_ROOT, 'packages/sdk/langs/python');
 const PYTHON_VENDOR_CLI_DIR = path.join(PYTHON_SDK_DIR, 'superdoc', '_vendor', 'cli');
 const STAGE_PYTHON_EMBEDDED_SCRIPT = path.join(REPO_ROOT, 'packages/sdk/scripts/stage-python-embedded-cli.mjs');
+const VERIFY_PYTHON_WHEEL_SCRIPT = path.join(REPO_ROOT, 'packages/sdk/scripts/verify-python-wheel-embedded-cli.mjs');
 const TOOLS_SOURCE = path.join(REPO_ROOT, 'packages/sdk/tools');
 const NPM_CACHE_DIR = path.join(REPO_ROOT, '.cache', 'npm');
 
-const PYTHON_EMBEDDED_TARGETS = ['darwin-arm64', 'darwin-x64', 'linux-x64', 'linux-arm64', 'windows-x64'];
+const PYTHON_EMBEDDED_TARGETS = pythonEmbeddedCliTargetIds();
 
 const argv = process.argv.slice(2);
 const dryRun = argv.includes('--dry-run');
@@ -119,6 +122,7 @@ async function main() {
   // Python publishing is handled by the release-sdk.yml workflow via PyPI trusted publishing (OIDC).
   // This script only builds the wheel for local verification.
   console.log('\n--- Python SDK (build only — publish via release-sdk.yml workflow) ---');
+  await run('pnpm', ['run', 'build:es'], { cwd: SUPERDOC_PACKAGE_DIR });
   await run('pnpm', ['--prefix', CLI_APP_DIR, 'run', 'build:native:all']);
   await run('pnpm', ['--prefix', CLI_APP_DIR, 'run', 'build:stage']);
 
@@ -131,6 +135,7 @@ async function main() {
 
       await run('node', [STAGE_PYTHON_EMBEDDED_SCRIPT]);
       await run('python3', ['-m', 'build'], { cwd: PYTHON_SDK_DIR });
+      await run('node', [VERIFY_PYTHON_WHEEL_SCRIPT]);
       console.log('  Python wheel built. Use the release-sdk.yml workflow to publish to PyPI.');
 
       // Clean build artifacts
