@@ -6,7 +6,7 @@ import { registerAllTools } from './tools/index.js';
 
 const server = new McpServer({
   name: 'superdoc',
-  version: '1.0.0',
+  version: '0.0.0',
 });
 
 const sessions = new SessionManager();
