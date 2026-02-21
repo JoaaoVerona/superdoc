@@ -88,12 +88,14 @@ jobs:
       - name: Build Node SDK
         run: pnpm --prefix packages/sdk/langs/node run build
 
-      - name: Publish Node SDK
-        if: ${{ !inputs.dry-run }}
-        run: npm publish --access public --tag latest
-        working-directory: packages/sdk/langs/node
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # TEMPORARY: Node publish disabled while Python companion publishing is being set up.
+      # Uncomment once PyPI OIDC is fully configured.
+      # - name: Publish Node SDK
+      #   if: ${{ !inputs.dry-run }}
+      #   run: npm publish --access public --tag latest
+      #   working-directory: packages/sdk/langs/node
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish Node SDK (dry run)
         if: ${{ inputs.dry-run }}
