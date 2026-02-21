@@ -149,7 +149,7 @@ jobs:
           cp packages/sdk/langs/python/companion-dist/*.whl /tmp/sdk-wheelhouse/
           /tmp/sdk-smoke/bin/pip install superdoc-sdk --find-links /tmp/sdk-wheelhouse --no-index
           /tmp/sdk-smoke/bin/python -c "from superdoc import SuperDocClient; SuperDocClient()"
-          /tmp/sdk-smoke/bin/python -c "from superdoc.embedded_cli import resolve_embedded_cli_path; import subprocess; p = resolve_embedded_cli_path(); r = subprocess.run([p, '--version'], capture_output=True, text=True, timeout=10); assert r.returncode == 0, f'CLI exited {r.returncode}: {r.stderr}'; print(f'CLI binary OK: {r.stdout.strip()}')"
+          /tmp/sdk-smoke/bin/python -c "from superdoc.embedded_cli import resolve_embedded_cli_path; import subprocess; p = resolve_embedded_cli_path(); r = subprocess.run([p, '--help'], capture_output=True, text=True, timeout=10); assert r.returncode == 0, f'CLI exited {r.returncode}: {r.stderr}'; print(f'CLI binary OK: {p}')"
           echo "Smoke test passed — marker resolution + binary execution work."
           rm -rf /tmp/sdk-smoke /tmp/sdk-wheelhouse
 
