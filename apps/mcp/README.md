@@ -2,7 +2,7 @@
 
 MCP server for SuperDoc. Lets AI agents open, read, edit, and save `.docx` files through the [Model Context Protocol](https://modelcontextprotocol.io).
 
-Works with Claude Code, Claude Desktop, Cursor, Windsurf, OpenAI Codex, and any MCP-compatible client.
+Works with Claude Code, Claude Desktop, Cursor, Windsurf, and any MCP-compatible client.
 
 ## Quick start
 
