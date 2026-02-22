@@ -97,10 +97,7 @@
               "document-api/overview",
               "document-engine/sdks",
               "document-engine/cli",
-              {
-                "page": "document-engine/mcp",
-                "tag": "NEW"
-              }
+              "document-engine/mcp"
             ]
           },
           {
@@ -245,7 +242,6 @@
       },
       {
         "tab": "Backend Services",
-        "url": "api-reference",
         "groups": [
           {
             "group": "Getting Started",
