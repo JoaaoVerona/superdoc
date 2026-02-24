@@ -31,6 +31,7 @@ import {
   scheduleSectionBreak as scheduleSectionBreakExport,
   type SectionState,
   applyPendingToActive,
+  SINGLE_COLUMN_DEFAULT,
 } from './section-breaks.js';
 import { layoutParagraphBlock } from './layout-paragraph.js';
 import { layoutImageBlock } from './layout-image.js';
@@ -725,7 +726,7 @@ export function layoutDocument(blocks: FlowBlock[], measures: Measure[], options
 
   // Track active and pending columns
   let activeColumns = options.columns ?? { count: 1, gap: 0 };
-  let pendingColumns: { count: number; gap: number; withSeparator?: boolean } | null = null;
+  let pendingColumns: ColumnLayout | null = null;
 
   // Track active and pending orientation
   let activeOrientation: 'portrait' | 'landscape' | null = null;
@@ -830,7 +831,7 @@ export function layoutDocument(blocks: FlowBlock[], measures: Measure[], options
         next.pendingColumns = null;
       } else {
         // No columns specified = reset to single column (OOXML default)
-        next.activeColumns = { count: 1, gap: 0, withSeparator: false };
+        next.activeColumns = { ...SINGLE_COLUMN_DEFAULT };
         next.pendingColumns = null;
       }
       // Schedule section refs for first section (will be applied on first page creation)
@@ -938,7 +939,7 @@ export function layoutDocument(blocks: FlowBlock[], measures: Measure[], options
     const getColumnConfig = () =>
       block.columns
         ? { count: block.columns.count, gap: block.columns.gap, withSeparator: block.columns.withSeparator }
-        : { count: 1, gap: 0, withSeparator: false };
+        : { ...SINGLE_COLUMN_DEFAULT };
 
     if (block.attrs?.requirePageBoundary) {
       next.pendingColumns = getColumnConfig();
@@ -1318,10 +1319,7 @@ export function layoutDocument(blocks: FlowBlock[], measures: Measure[], options
   const advanceColumn = paginator.advanceColumn;
 
   // Start a new mid-page region with different column configuration
-  const startMidPageRegion = (
-    state: PageState,
-    newColumns: { count: number; gap: number; withSeparator?: boolean },
-  ): void => {
+  const startMidPageRegion = (state: PageState, newColumns: ColumnLayout): void => {
     // Record the boundary at current Y position
     const boundary: ConstraintBoundary = {
       y: state.cursorY,
@@ -2682,3 +2680,5 @@ export type { NumberingContext, ResolvePageTokensResult } from './resolvePageTok
 
 // Export table utilities for reuse by painter-dom
 export { rescaleColumnWidths, getCellLines } from './layout-table.js';
+
+export { SINGLE_COLUMN_DEFAULT } from './section-breaks.js';
